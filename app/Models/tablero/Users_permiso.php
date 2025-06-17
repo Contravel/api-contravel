@@ -1,17 +1,20 @@
 <?php
 
-namespace App\Models\bitacora;
+namespace App\Models\tablero;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Servicio extends Model
+class Users_permiso extends Model
 {
-    protected $connection = 'mysql3';
-    protected $table = 'servicios';
+    protected $table = 'users_permisos';
     protected $primaryKey = 'id';
     protected $fillable = [
-        'servicio',
+        'user',
+        'permiso',
+
     ];
+
+
     public $timestamps = false;
 }

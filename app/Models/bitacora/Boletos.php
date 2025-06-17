@@ -5,13 +5,16 @@ namespace App\Models\bitacora;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Servicio extends Model
+class Boletos extends Model
 {
     protected $connection = 'mysql3';
-    protected $table = 'servicios';
+    protected $table = 'tbl_boletos';
     protected $primaryKey = 'id';
     protected $fillable = [
-        'servicio',
+        'id_boleto',
+        'id_bitacora',
+        'concepto',
+        'cargo'
     ];
     public $timestamps = false;
 }

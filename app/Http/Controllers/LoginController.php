@@ -2,22 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Agencia;
-use App\Models\Cliente;
-use App\Models\Contravel_permiso;
-use App\Models\Contravel_user;
-use App\Models\User;
-use App\Models\Users_permiso;
-use App\Traits\TokenManage;
-use Illuminate\Database\QueryException;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
-use SoapClient;
 use stdClass;
 use Throwable;
+use SoapClient;
+use App\Traits\TokenManage;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Models\contravel_bd\Agencia;
+use App\Models\contravel_bd\Cliente;
+use Illuminate\Support\Facades\Http;
+use App\Models\tablero\Users_permiso;
+use App\Models\tablero\Contravel_user;
+use App\Http\Controllers\ApiController;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Validator;
 
 class LoginController extends ApiController
 {
@@ -49,7 +48,7 @@ class LoginController extends ApiController
             return $this->errorResponse('Error de validación', $firstError[0], 422);
         }
 
-        $wsdl = 'https://agent-staging.contravel.com.mx/AuthApi/Login';
+        $wsdl = 'https://agent.contravel.com.mx/AuthApi/Login';
 
 
         try {
@@ -137,8 +136,8 @@ class LoginController extends ApiController
 
     public function loginContravel(Request $request)
     {
-        $api = self::apiIris($request)->getData(true);
-        //$api =  self::apiRoyal($request)->getData(true);
+        //$api = self::apiIris($request)->getData(true);
+        $api =  self::apiRoyal($request)->getData(true);
         if (!$api['success']) {
             return $api;
         } else if ($api['data']['agency'] !== "100100" && $api['data']['agency'] !== "030004") {
