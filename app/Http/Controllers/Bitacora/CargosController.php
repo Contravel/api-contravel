@@ -11,10 +11,8 @@ use Illuminate\Support\Facades\Validator;
 
 class CargosController extends ApiController
 {
-
     public function updateCargo(Request $request)
     {
-        // Validar datos
         $validated = Validator::make($request->all(), [
             'bitacora' => 'required|integer',
             'cuenta' => 'required|string|max:255',
@@ -22,49 +20,42 @@ class CargosController extends ApiController
 
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
-            $firstError = is_array($errors) && count($errors) > 0 ? array_values($errors)[0] : ['Error desconocido'];
-            return $this->errorResponse('Error de validación', $firstError[0], 422);
+            $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
+            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
         }
 
         try {
-            // Crear el nuevo registro en la tabla seguimiento_cargo
             $cargo = new SeguimientoCargos();
             $cargo->seguimiento = $request->bitacora;
             $cargo->numCargo = $request->cuenta;
             $cargo->save();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Cargo actualizado correctamente'
-            ]);
+            return $this->successResponse('Cargo actualizado correctamente');
         } catch (Exception $e) {
-            return $this->errorResponse('Error al actualizar el cargo', $e->getMessage(), 500);
+            return $this->errorResponse('Error al actualizar el cargo', ['exception' => $e->getMessage()], 500);
         }
     }
+
     public function obtenerCargos()
     {
         try {
             $cargos = Cargos::all();
-
-            return response()->json([
-                'success' => true,
-                'data' => $cargos
-            ]);
+            return $this->successResponse('Cargos obtenidos correctamente', $cargos);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al obtener los cargos', $e->getMessage(), 500);
+            return $this->errorResponse('Error al obtener los cargos', ['exception' => $e->getMessage()], 500);
         }
     }
+
     public function obtenerCargoByServicio(Request $request)
     {
-        // Validar el parámetro
         $validated = Validator::make($request->all(), [
             'servicio' => 'required|integer',
         ]);
 
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
-            $firstError = is_array($errors) && count($errors) > 0 ? array_values($errors)[0] : ['Error desconocido'];
-            return $this->errorResponse('Error de validación', $firstError[0], 422);
+            $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
+            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
         }
 
         $servicio = $request->servicio;
@@ -77,18 +68,12 @@ class CargosController extends ApiController
             $cargo = Cargos::find($servicio);
 
             if (!$cargo) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cargo no encontrado'
-                ], 404);
+                return $this->errorResponse('Cargo no encontrado', ['detalle' => 'No existe un cargo con el ID proporcionado'], 404);
             }
 
-            return response()->json([
-                'success' => true,
-                'data' => $cargo
-            ]);
+            return $this->successResponse('Cargo obtenido correctamente', $cargo);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al obtener el cargo', $e->getMessage(), 500);
+            return $this->errorResponse('Error al obtener el cargo', ['exception' => $e->getMessage()], 500);
         }
     }
 }

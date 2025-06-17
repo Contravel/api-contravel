@@ -10,8 +10,9 @@ use PhpOffice\PhpSpreadsheet\Writer\Csv;
 use Illuminate\Support\Facades\Validator;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Exception as WriterException;
+use App\Http\Controllers\ApiController;
 
-class ReporteController extends Controller
+class ReporteController extends ApiController
 {
 
     public function crearReporte(Request $request)

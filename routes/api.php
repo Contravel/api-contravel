@@ -46,8 +46,4 @@ Route::prefix('bitacora')->group(function () {
     Route::post('obtenerAgencias', [AgenciasController::class, 'obtenerClientes'])->name('api.agencias.obbitacora');
     Route::post('generaReporte', [ReporteController::class, 'crearReporte'])->name('api.agencias.reporte');
     Route::post('eliminarBoleto', [BoletosController::class, 'eliminarBoleto'])->name('api.agencias.delboletos');
-
-
-
-    // obtenerPermisos
 });

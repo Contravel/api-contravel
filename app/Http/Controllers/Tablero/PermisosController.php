@@ -5,10 +5,8 @@ namespace App\Http\Controllers\Tablero;
 use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Http;
-use App\Models\tablero\Users_permiso;
 use App\Http\Controllers\ApiController;
+use App\Models\tablero\Users_permiso;
 use Illuminate\Support\Facades\Validator;
 
 class PermisosController extends ApiController
@@ -30,15 +28,11 @@ class PermisosController extends ApiController
             // Buscar los permisos del usuario
             $permisos = Users_permiso::where('user', $request->usuario)->pluck('permiso');
 
-            return response()->json([
-                'success' => true,
-                'permisos' => $permisos
-            ]);
+            return $this->successResponse('Permisos obtenidos correctamente', ['permisos' => $permisos], 200);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al obtener permisos', $e->getMessage(), 500);
+            return $this->errorResponse('Error al obtener permisos', ['exception' => $e->getMessage()], 500);
         }
     }
-
 
     public function iris(Request $request)
     {
@@ -61,26 +55,33 @@ class PermisosController extends ApiController
                     'password' => $request->password,
                 ]
             ];
+
             $response = $client->post('/login/v1', $options);
             $datos = json_decode($response->getBody());
 
             if ($datos->status !== 'true') {
-                return response()->json($datos);
+                return $this->errorResponse('Autenticación fallida', ['message' => $datos->message ?? 'Credenciales inválidas'], 401);
             }
 
             // Sesión de usuario
             session([
                 'usuario'    => $datos->userName,
                 'firstName'  => $datos->firstName,
-                'lastName'   => $datos->lastName1 . ' ' . $datos->lastName2,
+                'lastName'   => trim($datos->lastName1 . ' ' . $datos->lastName2),
                 'email'      => $datos->email,
             ]);
 
-            $this->consultarPermisoLocal($datos->userName);
+            $permisoResult = $this->consultarPermisoLocal($datos->userName);
 
-            return response()->json(session()->all());
+            if (isset($permisoResult['success']) && $permisoResult['success'] === false) {
+                // Si hay error asignando permiso local, podemos decidir si reportar o ignorar.
+                // Aquí solo reporto el error.
+                return $this->errorResponse('Error al asignar permiso local', $permisoResult['errors'] ?? [], 500);
+            }
+
+            return $this->successResponse('Autenticación exitosa', session()->all(), 200);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al autenticar con Iris', $e->getMessage(), 500);
+            return $this->errorResponse('Error al autenticar con Iris', ['exception' => $e->getMessage()], 500);
         }
     }
 
@@ -95,21 +96,22 @@ class PermisosController extends ApiController
                 return $this->asignarPermisoLocal($user);
             }
 
-            return true;
+            return ['success' => true];
         } catch (Exception $e) {
-            return $this->errorResponse('Error al consultar permiso local', $e->getMessage(), 500);
+            return $this->errorResponse('Error al consultar permiso local', ['exception' => $e->getMessage()], 500);
         }
     }
 
     private function asignarPermisoLocal($user)
     {
         try {
-            return Users_permiso::create([
+            Users_permiso::create([
                 'user' => $user,
                 'permiso' => 'USER_BITACORA',
             ]);
+            return ['success' => true];
         } catch (Exception $e) {
-            return $this->errorResponse('Error al asignar permiso local', $e->getMessage(), 500);
+            return $this->errorResponse('Error al asignar permiso local', ['exception' => $e->getMessage()], 500);
         }
     }
 
@@ -122,21 +124,22 @@ class PermisosController extends ApiController
                 return $this->asignarPermiso($user);
             }
 
-            return true;
+            return ['success' => true];
         } catch (Exception $e) {
-            return $this->errorResponse('Error al consultar permiso', $e->getMessage(), 500);
+            return $this->errorResponse('Error al consultar permiso', ['exception' => $e->getMessage()], 500);
         }
     }
 
     public function asignarPermiso($user)
     {
         try {
-            return Users_permiso::create([
+            Users_permiso::create([
                 'user' => $user,
                 'permiso' => 'USER_GENERAL',
             ]);
+            return ['success' => true];
         } catch (Exception $e) {
-            return $this->errorResponse('Error al asignar permiso', $e->getMessage(), 500);
+            return $this->errorResponse('Error al asignar permiso', ['exception' => $e->getMessage()], 500);
         }
     }
 }

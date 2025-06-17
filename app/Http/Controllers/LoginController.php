@@ -14,9 +14,9 @@ use App\Models\contravel_bd\Cliente;
 use Illuminate\Support\Facades\Http;
 use App\Models\tablero\Users_permiso;
 use App\Models\tablero\Contravel_user;
-use App\Http\Controllers\ApiController;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\ApiController;
 
 class LoginController extends ApiController
 {
@@ -42,14 +42,14 @@ class LoginController extends ApiController
                 'password.required' => 'The password field is required.',
             ]
         );
+
         if ($validator->fails()) {
             $errors = $validator->errors()->toArray();
-            $firstError = is_array($errors) && count($errors) > 0 ? array_values($errors)[0] : 'Error desconocido';
-            return $this->errorResponse('Error de validación', $firstError[0], 422);
+            // Mantener errors como array con mensajes
+            return $this->errorResponse('Error de validación', $errors, 422);
         }
 
         $wsdl = 'https://agent.contravel.com.mx/AuthApi/Login';
-
 
         try {
             $response = Http::post($wsdl, [
@@ -57,33 +57,32 @@ class LoginController extends ApiController
                 'password' => $request->input('password'),
             ]);
 
-            if ($response->status()) {
+            if ($response->successful()) {
                 $data = $response->json();
                 Log::info(json_encode($data));
-                if ($data['Status'] !== false) {
-                    $user = new \stdClass();
+                if (!empty($data) && isset($data['Status']) && $data['Status'] !== false) {
+                    $user = new stdClass();
                     $user->id = $data['AgentId'];
                     $user->agency = $data['DkNumber'];
                     $user->agencyName = $data['AgencyName'];
-                    $user->agencyMail = NULL;
-                    $user->mail = NULL;
+                    $user->agencyMail = null;
+                    $user->mail = null;
                     $user->name = $data['AgentFullName'];
                     $user->token = $data['Token'];
                     return $this->successResponse('Login Success', $user);
                 } else {
-                    return $this->errorResponse('Error al validar Usuario', $data, 404);
+                    return $this->errorResponse('Error al validar Usuario', ['response' => $data], 404);
                 }
             } else {
-                // Manejo de error
                 $status = $response->status();
-                $error = $response->body(); // o $response->json()
+                $error = $response->json() ?? ['body' => $response->body()];
                 return $this->errorResponse("Error en la solicitud", $error, $status);
             }
         } catch (Throwable $e) {
-
-            return $this->errorResponse('Error  Request', $e->getMessage(), 500);
+            return $this->errorResponse('Error en la solicitud', ['exception' => $e->getMessage()], 500);
         }
     }
+
     private function apiIris(Request $request)
     {
         $validator = Validator::make(
@@ -97,10 +96,10 @@ class LoginController extends ApiController
                 'password.required' => 'The password field is required.',
             ]
         );
+
         if ($validator->fails()) {
             $errors = $validator->errors()->toArray();
-            $firstError = is_array($errors) && count($errors) > 0 ? array_values($errors)[0] : 'Error desconocido';
-            return $this->errorResponse('Error de validación', $firstError[0], 422);
+            return $this->errorResponse('Error de validación', $errors, 422);
         }
 
         $wsdl = 'http://aereo.contravel.grupoiris.net/login-ws002/LoginService?wsdl';
@@ -117,38 +116,45 @@ class LoginController extends ApiController
             $response = $client->doLogin(['request' => $params]);
             $data = $response->response;
             Log::info(json_encode($data));
-            $user = new \stdClass();
+
+            $user = new stdClass();
             $user->id = $data->User->Id;
             $user->agency = $data->Agency->Reference;
             $user->agencyName = $data->Agency->Name;
             $user->agencyMail = $data->Agency->Email;
             $user->mail = $data->User->email;
-            $user->name = $data->User->FirstName . ' ' . $data->User->LastName1 . ' ' . $data->User->LastName2;
+            $user->name = trim($data->User->FirstName . ' ' . $data->User->LastName1 . ' ' . $data->User->LastName2);
             $user->token = $data->Uuid;
 
             return $this->successResponse('Login successful', $user);
         } catch (\SoapFault $e) {
-            return $this->errorResponse('SOAP Fault', $e->getMessage(), 500);
+            return $this->errorResponse('SOAP Fault', ['exception' => $e->getMessage()], 500);
         } catch (\Exception $e) {
-            return $this->errorResponse('An error occurred', $e->getMessage(), 500);
+            return $this->errorResponse('An error occurred', ['exception' => $e->getMessage()], 500);
         }
     }
 
     public function loginContravel(Request $request)
     {
-        //$api = self::apiIris($request)->getData(true);
-        $api =  self::apiRoyal($request)->getData(true);
+        $api = self::apiRoyal($request)->getData(true);
+
         if (!$api['success']) {
             return $api;
-        } else if ($api['data']['agency'] !== "100100" && $api['data']['agency'] !== "030004") {
-            return $this->errorResponse('Unauthorization : ', 'Sin autorizacion a plataformas.', 404);
         }
+
+        if ($api['data']['agency'] !== "100100" && $api['data']['agency'] !== "030004") {
+            return $this->errorResponse('Unauthorized', ['message' => 'Sin autorización a plataformas.'], 403);
+        }
+
         $data = $api['data'];
+
         try {
             $key = mb_convert_encoding($this->secret, 'UTF-8');
             $cifrado = mb_convert_encoding($request->input('password'), 'UTF-8');
             $hash = hash_hmac('sha256', $cifrado, $key);
+
             DB::beginTransaction();
+
             $user = Contravel_user::updateOrCreate(
                 ['id' => $data['id']],
                 [
@@ -170,34 +176,41 @@ class LoginController extends ApiController
             $jwt = $this->generateToken($user->id, $user->user, $data['token']);
             if (!$jwt->status) {
                 DB::rollBack();
-                return $this->errorResponse(" Token Error: ", $jwt->message, 500);
+                return $this->errorResponse("Token Error", ['message' => $jwt->message], 500);
             }
+
             DB::commit();
-            return $this->successResponse('Sesion iniciada correctamente', $jwt->token);
+            return $this->successResponse('Sesión iniciada correctamente', ['token' => $jwt->token]);
         } catch (QueryException $e) {
             DB::rollBack();
-            return $this->errorResponse(" Sesion Error", 'No se pudo almacenar la información: ' . $e->getMessage(), 404);
+            return $this->errorResponse("Sesión Error", ['message' => 'No se pudo almacenar la información: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->errorResponse("Sesion Error", 'Error general: ' . $e->getMessage(), 500);
+            return $this->errorResponse("Sesión Error", ['message' => 'Error general: ' . $e->getMessage()], 500);
         }
     }
 
     public function loginAgencies(Request $request)
     {
         $api = self::apiIris($request)->getData(true);
-        //$api =  self::apiRoyal($request)->getData(true);
+
         if (!$api['success']) {
             return $api;
-        } else if ($api['data']['agency'] !== "100100" && $api['data']['agency'] !== "030004") {
-            return $this->errorResponse('Unauthorization : ', 'Sin autorizacion a plataformas.', 404);
         }
+
+        if ($api['data']['agency'] !== "100100" && $api['data']['agency'] !== "030004") {
+            return $this->errorResponse('Unauthorized', ['message' => 'Sin autorización a plataformas.'], 403);
+        }
+
         $data = $api['data'];
+
         try {
             $key = mb_convert_encoding($this->secret, 'UTF-8');
             $cifrado = mb_convert_encoding($request->input('password'), 'UTF-8');
             $hash = hash_hmac('sha256', $cifrado, $key);
+
             DB::beginTransaction();
+
             $cliente = Cliente::updateOrCreate(
                 ['id_iris' => $data['id']],
                 [
@@ -205,7 +218,7 @@ class LoginController extends ApiController
                     'cifrado' => $hash,
                     'full_name' => $data['name'],
                     'email' => $data['mail'],
-                    'cve_agencia' => $data['agency']
+                    'cve_agencia' => $data['agency'],
                 ]
             );
 
@@ -214,23 +227,24 @@ class LoginController extends ApiController
                 [
                     'Nombre_razonSo' => $data['agencyName'],
                     'email' => $data['agencyMail'],
-                    'Acceso' => true
+                    'Acceso' => true,
                 ]
             );
 
             $jwt = $this->generateToken($cliente->id_iris, $cliente->username, $data['token']);
             if (!$jwt->status) {
                 DB::rollBack();
-                return $this->errorResponse(" Token Error: ", $jwt->message, 500);
+                return $this->errorResponse("Token Error", ['message' => $jwt->message], 500);
             }
+
             DB::commit();
-            return $this->successResponse('Sesion iniciada correctamente', $jwt->token);
+            return $this->successResponse('Sesión iniciada correctamente', ['token' => $jwt->token]);
         } catch (QueryException $e) {
             DB::rollBack();
-            return $this->errorResponse(" Sesion Error", 'No se pudo almacenar la información: ' . $e->getMessage(), 404);
+            return $this->errorResponse("Sesión Error", ['message' => 'No se pudo almacenar la información: ' . $e->getMessage()], 500);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->errorResponse("Sesion Error", 'Error general: ' . $e->getMessage(), 500);
+            return $this->errorResponse("Sesión Error", ['message' => 'Error general: ' . $e->getMessage()], 500);
         }
     }
 }

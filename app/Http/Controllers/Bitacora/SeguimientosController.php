@@ -23,41 +23,42 @@ class SeguimientosController extends ApiController
 
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
-            $firstError = is_array($errors) && count($errors) > 0 ? array_values($errors)[0] : 'Error desconocido';
-            return $this->errorResponse('Error de validación', $firstError[0], 422);
+            $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
+            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
         }
 
-        $idBitacora = $validated['idBitacora'];
-        $nota = $validated['nota'] ?? null;
-        $estatus = $validated['estatus'];
-        $historico = $validated['historico'];
+        $idBitacora = $request->idBitacora;
+        $nota = $request->nota ?? null;
+        $estatus = $request->estatus;
+        $historico = $request->historico;
 
-        // Usar método estático para guardar nota
-        $saveNota = is_null($nota) || $nota === '' ? true : NotasController::guardarNotaDirecta($nota, $idBitacora);
+        $saveNota = is_null($nota) || $nota === ''
+            ? true
+            : NotasController::guardarNotaDirecta($nota, $idBitacora);
 
-        if ($saveNota) {
-            try {
-                $seguimiento = Seguimientos::find($idBitacora);
+        if (!$saveNota) {
+            return $this->errorResponse('No se pudo guardar la nota', [], 400);
+        }
 
-                if (!$seguimiento) {
-                    return response()->json(['success' => false, 'message' => 'Seguimiento no encontrado'], 404);
-                }
+        try {
+            $seguimiento = Seguimientos::find($idBitacora);
 
-                $seguimiento->estatus = $estatus;
-
-                if ($historico == 4) {
-                    $seguimiento->id_servicio = 2;
-                }
-
-                $seguimiento->save();
-
-                return response()->json(['success' => true, 'message' => 'Estatus actualizado correctamente']);
-            } catch (Exception $e) {
-                return $this->errorResponse('Error al actualizar el estatus', $e->getMessage(), 500);
+            if (!$seguimiento) {
+                return $this->errorResponse('Seguimiento no encontrado', ['detalle' => 'ID inválido'], 404);
             }
-        }
 
-        return response()->json(['success' => false, 'message' => 'No se pudo guardar la nota'], 400);
+            $seguimiento->estatus = $estatus;
+
+            if ($historico == 4) {
+                $seguimiento->id_servicio = 2;
+            }
+
+            $seguimiento->save();
+
+            return $this->successResponse('Estatus actualizado correctamente', []);
+        } catch (Exception $e) {
+            return $this->errorResponse('Error al actualizar el estatus', ['exception' => $e->getMessage()], 500);
+        }
     }
 
     public function saveBitacora(Request $request)
@@ -71,8 +72,8 @@ class SeguimientosController extends ApiController
 
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
-            $firstError = is_array($errors) && count($errors) > 0 ? array_values($errors)[0] : ['Error desconocido'];
-            return $this->errorResponse('Error de validación', $firstError[0], 422);
+            $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
+            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
         }
 
         try {
@@ -92,46 +93,41 @@ class SeguimientosController extends ApiController
             $nota = "Se creó nueva bitácora para " . $request->nomCliente;
             NotasController::guardarNotaDirecta($nota, $idBitacora);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Bitácora creada correctamente',
-                'id_bitacora' => $idBitacora
-            ]);
+            return $this->successResponse('Bitácora creada correctamente', ['id_bitacora' => $idBitacora]);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al guardar la bitácora', $e->getMessage(), 500);
+            return $this->errorResponse('Error al guardar la bitácora', ['exception' => $e->getMessage()], 500);
         }
     }
+
     public function deleteBitacora(Request $request)
     {
-        // Validar que el ID sea un entero requerido
         $validated = Validator::make($request->all(), [
             'id' => 'required|integer',
         ]);
 
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
-            $firstError = is_array($errors) && count($errors) > 0 ? array_values($errors)[0] : ['Error desconocido'];
-            return $this->errorResponse('Error de validación', $firstError[0], 422);
+            $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
+            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
         }
 
         try {
             $bitacora = Seguimientos::find($request->id);
 
             if (!$bitacora) {
-                return response()->json(['success' => false, 'message' => 'Registro no encontrado'], 404);
+                return $this->errorResponse('Registro no encontrado', ['detalle' => 'ID inválido'], 404);
             }
 
             $bitacora->delete();
 
-            return response()->json(['success' => true, 'message' => 'Registro eliminado correctamente']);
+            return $this->successResponse('Registro eliminado correctamente', []);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al eliminar el registro', $e->getMessage(), 500);
+            return $this->errorResponse('Error al eliminar el registro', ['exception' => $e->getMessage()], 500);
         }
     }
 
     public function saveCotizacionBitacora(Request $request)
     {
-        // Validación
         $validated = Validator::make($request->all(), [
             'pnr' => 'required|string',
             'cveAgencia' => 'required|string',
@@ -139,78 +135,69 @@ class SeguimientosController extends ApiController
             'servicio' => 'required|integer',
             'cargo' => 'required|array|min:1',
             'cargo.0' => 'required|array',
-            'cargo.0.boleto' => 'nullable', // Se va a sobreescribir
+            'cargo.0.boleto' => 'nullable',
             'status' => 'required|string',
         ]);
 
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
-            $firstError = is_array($errors) && count($errors) > 0 ? array_values($errors)[0] : ['Error desconocido'];
-            return $this->errorResponse('Error de validación', $firstError[0], 422);
+            $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
+            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
         }
 
-        $user = auth()->user(); // O reemplázalo por tu sistema personalizado de sesión
+        $user = auth()->user();
 
         try {
-            // Guardar seguimiento
             $seguimiento = new Seguimientos();
             $seguimiento->pnr = $request->pnr;
             $seguimiento->cve_agencia = $request->cveAgencia;
             $seguimiento->nombre_agencia = $request->nomCliente;
-            $seguimiento->user = $user->usuario ?? 'sistema'; // Asegúrate que exista esta propiedad
+            $seguimiento->user = $user->usuario ?? 'sistema';
             $seguimiento->id_servicio = $request->servicio;
             $seguimiento->estatus = $request->status;
             $seguimiento->save();
 
             $idBitacora = $seguimiento->id;
 
-            // Asignar fecha actual al campo boleto del primer cargo
             $cargo = $request->cargo;
             $cargo[0]['boleto'] = now()->timestamp;
 
-            // Guardar boletos
             $this->saveBoletos($cargo, $idBitacora);
 
-            // Guardar nota
             $nota = 'Se creó nueva Cotización para ' . $request->nomCliente;
             $this->saveNotas($nota, $idBitacora);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Cotización guardada correctamente',
-            ]);
+            return $this->successResponse('Cotización guardada correctamente', []);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al guardar la cotización', $e->getMessage(), 500);
+            return $this->errorResponse('Error al guardar la cotización', ['exception' => $e->getMessage()], 500);
         }
     }
+
     public function obtenerEstatus(Request $request)
     {
-        // Validar que el ID venga y sea un entero
         $validated = Validator::make($request->all(), [
             'id' => 'required|integer'
         ]);
 
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
-            $firstError = is_array($errors) && count($errors) > 0 ? array_values($errors)[0] : ['Error desconocido'];
-            return $this->errorResponse('Error de validación', $firstError[0], 422);
+            $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
+            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
         }
 
         try {
             $seguimiento = Seguimientos::select('estatus')->find($request->id);
 
             if (!$seguimiento) {
-                return $this->errorResponse('Seguimiento no encontrado', 'No se encontró un seguimiento con el ID proporcionado.', 404);
+                return $this->errorResponse('Seguimiento no encontrado', ['detalle' => 'ID inválido'], 404);
             }
 
-            return response()->json([
-                'success' => true,
-                'estatus' => $seguimiento->estatus
-            ]);
+            return $this->successResponse('Estatus obtenido correctamente', ['estatus' => $seguimiento->estatus]);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al obtener el estatus', $e->getMessage(), 500);
+            return $this->errorResponse('Error al obtener el estatus', ['exception' => $e->getMessage()], 500);
         }
     }
+
     public function obtenerBitacoras(Request $request)
     {
         $validated = Validator::make($request->all(), [
@@ -219,8 +206,8 @@ class SeguimientosController extends ApiController
 
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
-            $firstError = is_array($errors) && count($errors) > 0 ? array_values($errors)[0] : ['Error desconocido'];
-            return $this->errorResponse('Error de validación', $firstError[0], 422);
+            $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
+            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
         }
 
         $user = $request->user;
@@ -240,12 +227,9 @@ class SeguimientosController extends ApiController
 
             $bitacoras = $query->get();
 
-            return response()->json([
-                'success' => true,
-                'data' => $bitacoras
-            ]);
+            return $this->successResponse('Bitácoras obtenidas correctamente', ['data' => $bitacoras]);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al obtener las bitácoras', $e->getMessage(), 500);
+            return $this->errorResponse('Error al obtener las bitácoras', ['exception' => $e->getMessage()], 500);
         }
     }
 }

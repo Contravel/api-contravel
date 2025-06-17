@@ -12,7 +12,6 @@ class BoletosController extends ApiController
 {
     public function saveBoletos(Request $request)
     {
-        // Validar estructura del request
         $validated = Validator::make($request->all(), [
             'idBitacora'   => 'required|integer',
             'listBoletos'  => 'required|array',
@@ -23,8 +22,8 @@ class BoletosController extends ApiController
 
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
-            $firstError = is_array($errors) && count($errors) > 0 ? array_values($errors)[0] : ['Error desconocido'];
-            return $this->errorResponse('Error de validación', $firstError[0], 422);
+            $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
+            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
         }
 
         try {
@@ -35,65 +34,58 @@ class BoletosController extends ApiController
                 $cargoMasIva = round($boletoData['precio'] * 1.16);
 
                 $boleto = new Boletos();
-                $boleto->id_boleto  = $boletoData['boleto'];
+                $boleto->id_boleto   = $boletoData['boleto'];
                 $boleto->id_bitacora = $idBitacora;
-                $boleto->concepto   = $boletoData['cargo'];
-                $boleto->cargo      = $cargoMasIva;
+                $boleto->concepto    = $boletoData['cargo'];
+                $boleto->cargo       = $cargoMasIva;
                 $boleto->save();
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Boletos guardados correctamente'
-            ]);
+            return $this->successResponse('Boletos guardados correctamente');
         } catch (Exception $e) {
-            return $this->errorResponse('Error al guardar boletos', $e->getMessage(), 500);
+            return $this->errorResponse('Error al guardar boletos', ['exception' => $e->getMessage()], 500);
         }
     }
+
     public function deleteBoletoByBitacora(Request $request)
     {
-        // Validar el parámetro recibido
         $validated = Validator::make($request->all(), [
             'id' => 'required|integer',
         ]);
 
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
-            $firstError = is_array($errors) && count($errors) > 0 ? array_values($errors)[0] : ['Error desconocido'];
-            return $this->errorResponse('Error de validación', $firstError[0], 422);
+            $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
+            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
         }
 
         try {
-            // Eliminar boletos con el id_bitacora proporcionado
             $deleted = Boletos::where('id_bitacora', $request->id)->delete();
 
             if ($deleted === 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No se encontraron boletos para eliminar con ese ID de bitácora'
-                ], 404);
+                return $this->errorResponse(
+                    'No se encontraron boletos para eliminar',
+                    ['detalle' => 'No se encontraron boletos con ese ID de bitácora'],
+                    404
+                );
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Boletos eliminados correctamente'
-            ]);
+            return $this->successResponse('Boletos eliminados correctamente');
         } catch (Exception $e) {
-            return $this->errorResponse('Error al eliminar boletos', $e->getMessage(), 500);
+            return $this->errorResponse('Error al eliminar boletos', ['exception' => $e->getMessage()], 500);
         }
     }
 
     public function obtenerBoletos(Request $request)
     {
-        // Validación
         $validated = Validator::make($request->all(), [
             'id' => 'required|integer',
         ]);
 
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
-            $firstError = is_array($errors) && count($errors) > 0 ? array_values($errors)[0] : ['Error desconocido'];
-            return $this->errorResponse('Error de validación', $firstError[0], 422);
+            $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
+            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
         }
 
         try {
@@ -101,42 +93,36 @@ class BoletosController extends ApiController
                 ->orderBy('id_boleto', 'desc')
                 ->get();
 
-            return response()->json([
-                'success' => true,
-                'data' => $boletos,
-            ]);
-        } catch (\Exception $e) {
-            return $this->errorResponse('Error al obtener los boletos', $e->getMessage(), 500);
+            return $this->successResponse('Boletos obtenidos correctamente', $boletos);
+        } catch (Exception $e) {
+            return $this->errorResponse('Error al obtener los boletos', ['exception' => $e->getMessage()], 500);
         }
     }
+
     public function eliminarBoleto(Request $request)
     {
-        // Validación del ID
         $validated = Validator::make($request->all(), [
             'id' => 'required|integer|exists:tbl_boletos,id_boleto',
         ]);
 
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
-            $firstError = is_array($errors) && count($errors) > 0 ? array_values($errors)[0] : ['Error desconocido'];
-            return $this->errorResponse('Error de validación', $firstError[0], 422);
+            $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
+            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
         }
 
         try {
             $boleto = Boletos::where('id_boleto', $request->id)->first();
 
             if (!$boleto) {
-                return $this->errorResponse('Boleto no encontrado', 'No existe el boleto con el ID proporcionado', 404);
+                return $this->errorResponse('Boleto no encontrado', ['detalle' => 'No existe el boleto con el ID proporcionado'], 404);
             }
 
             $boleto->delete();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Boleto eliminado correctamente'
-            ]);
+            return $this->successResponse('Boleto eliminado correctamente');
         } catch (Exception $e) {
-            return $this->errorResponse('Error al eliminar el boleto', $e->getMessage(), 500);
+            return $this->errorResponse('Error al eliminar el boleto', ['exception' => $e->getMessage()], 500);
         }
     }
 }

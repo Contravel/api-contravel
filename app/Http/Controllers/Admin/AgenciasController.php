@@ -6,7 +6,6 @@ use App\Http\Controllers\ApiController;
 use App\Models\admin\AgenciasAdmon;
 use Exception;
 
-
 class AgenciasController extends ApiController
 {
     public function obtenerClientes()
@@ -16,12 +15,9 @@ class AgenciasController extends ApiController
                 ->where('ESTATUS', 'ACTIVA')
                 ->get();
 
-            return response()->json([
-                'success' => true,
-                'data' => $clientes
-            ]);
+            return $this->successResponse('Clientes obtenidos correctamente', $clientes);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al obtener los clientes', $e->getMessage(), 500);
+            return $this->errorResponse('Error al obtener los clientes', ['exception' => $e->getMessage()], 500);
         }
     }
 }
