@@ -71,7 +71,7 @@ class LoginController extends ApiController
                     $user->token = $data['Token'];
                     return $this->successResponse('Login Success', $user);
                 } else {
-                    return $this->errorResponse('Error al validar Usuario', ['response' => $data], 404);
+                    return $this->errorResponse('Error al validar Usuario', $data, 404);
                 }
             } else {
                 $status = $response->status();
@@ -79,7 +79,7 @@ class LoginController extends ApiController
                 return $this->errorResponse("Error en la solicitud", $error, $status);
             }
         } catch (Throwable $e) {
-            return $this->errorResponse('Error en la solicitud', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error en la solicitud',  $e->getMessage(), 500);
         }
     }
 
@@ -128,9 +128,9 @@ class LoginController extends ApiController
 
             return $this->successResponse('Login successful', $user);
         } catch (\SoapFault $e) {
-            return $this->errorResponse('SOAP Fault', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('SOAP Fault',  $e->getMessage(), 500);
         } catch (\Exception $e) {
-            return $this->errorResponse('An error occurred', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('An error occurred', $e->getMessage(), 500);
         }
     }
 
@@ -143,7 +143,7 @@ class LoginController extends ApiController
         }
 
         if ($api['data']['agency'] !== "100100" && $api['data']['agency'] !== "030004") {
-            return $this->errorResponse('Unauthorized', ['message' => 'Sin autorización a plataformas.'], 403);
+            return $this->errorResponse('Unauthorized', 'Sin autorización a plataformas.', 403);
         }
 
         $data = $api['data'];
@@ -176,17 +176,17 @@ class LoginController extends ApiController
             $jwt = $this->generateToken($user->id, $user->user, $data['token']);
             if (!$jwt->status) {
                 DB::rollBack();
-                return $this->errorResponse("Token Error", ['message' => $jwt->message], 500);
+                return $this->errorResponse("Token Error",  $jwt->message, 500);
             }
 
             DB::commit();
-            return $this->successResponse('Sesión iniciada correctamente', ['token' => $jwt->token]);
+            return $this->successResponse('Sesión iniciada correctamente',  $jwt->token);
         } catch (QueryException $e) {
             DB::rollBack();
-            return $this->errorResponse("Sesión Error", ['message' => 'No se pudo almacenar la información: ' . $e->getMessage()], 500);
+            return $this->errorResponse("Sesión Error",  'No se pudo almacenar la información: ' . $e->getMessage(), 500);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->errorResponse("Sesión Error", ['message' => 'Error general: ' . $e->getMessage()], 500);
+            return $this->errorResponse("Sesión Error", 'Error general: ' . $e->getMessage(), 500);
         }
     }
 
@@ -199,7 +199,7 @@ class LoginController extends ApiController
         }
 
         if ($api['data']['agency'] !== "100100" && $api['data']['agency'] !== "030004") {
-            return $this->errorResponse('Unauthorized', ['message' => 'Sin autorización a plataformas.'], 403);
+            return $this->errorResponse('Unauthorized', 'Sin autorización a plataformas.', 403);
         }
 
         $data = $api['data'];
@@ -234,17 +234,17 @@ class LoginController extends ApiController
             $jwt = $this->generateToken($cliente->id_iris, $cliente->username, $data['token']);
             if (!$jwt->status) {
                 DB::rollBack();
-                return $this->errorResponse("Token Error", ['message' => $jwt->message], 500);
+                return $this->errorResponse("Token Error",  $jwt->message, 500);
             }
 
             DB::commit();
-            return $this->successResponse('Sesión iniciada correctamente', ['token' => $jwt->token]);
+            return $this->successResponse('Sesión iniciada correctamente',  $jwt->token);
         } catch (QueryException $e) {
             DB::rollBack();
-            return $this->errorResponse("Sesión Error", ['message' => 'No se pudo almacenar la información: ' . $e->getMessage()], 500);
+            return $this->errorResponse("Sesión Error", 'No se pudo almacenar la información: ' . $e->getMessage(), 500);
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->errorResponse("Sesión Error", ['message' => 'Error general: ' . $e->getMessage()], 500);
+            return $this->errorResponse("Sesión Error", 'Error general: ' . $e->getMessage(), 500);
         }
     }
 }

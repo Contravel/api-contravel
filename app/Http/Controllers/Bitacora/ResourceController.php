@@ -28,7 +28,7 @@ class ResourceController extends ApiController
             return $this->successResponse('Servicios obtenidos correctamente', $services);
         }
 
-        return $this->errorResponse('Token inválido', ['detalle' => $payloadJWT->message], 401);
+        return $this->errorResponse('Token inválido',  $payloadJWT->message, 401);
     }
 
     public function getUser(Request $request)
@@ -41,7 +41,7 @@ class ResourceController extends ApiController
             return $this->successResponse('Usuario obtenido correctamente', $payloadJWT);
         }
 
-        return $this->errorResponse('Token inválido', ['detalle' => $payloadJWT->message], 401);
+        return $this->errorResponse('Token inválido',  $payloadJWT->message, 401);
     }
 
     public function saveData(Request $request)
@@ -56,7 +56,7 @@ class ResourceController extends ApiController
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
             $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
-            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
+            return $this->errorResponse('Error de validación',  $firstError, 422);
         }
 
         DB::connection('mysql3')->beginTransaction();
@@ -83,10 +83,10 @@ class ResourceController extends ApiController
 
             DB::connection('mysql3')->commit();
 
-            return $this->successResponse('Datos guardados correctamente', ['id_bitacora' => $bitacora->id]);
+            return $this->successResponse('Datos guardados correctamente',  $bitacora->id);
         } catch (Exception $e) {
             DB::connection('mysql3')->rollBack();
-            return $this->errorResponse('Error al guardar los datos', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al guardar los datos',  $e->getMessage(), 500);
         }
     }
 
@@ -96,7 +96,7 @@ class ResourceController extends ApiController
             $servicios = Servicio::all();
             return $this->successResponse('Servicios obtenidos correctamente', $servicios);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al obtener los servicios', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al obtener los servicios',  $e->getMessage(), 500);
         }
     }
 }

@@ -14,7 +14,7 @@ class TipoPagoController extends ApiController
             $pagos = TipoPago::all();
             return $this->successResponse('Pagos obtenidos correctamente', $pagos);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al obtener los pagos', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al obtener los pagos',  $e->getMessage(), 500);
         }
     }
 }

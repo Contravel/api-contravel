@@ -22,7 +22,7 @@ class NotasController extends ApiController
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
             $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
-            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
+            return $this->errorResponse('Error de validación',  $firstError, 422);
         }
 
         try {
@@ -36,7 +36,7 @@ class NotasController extends ApiController
 
             return $this->successResponse('Nota guardada correctamente');
         } catch (Exception $e) {
-            return $this->errorResponse('Error al guardar la nota', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al guardar la nota',  $e->getMessage(), 500);
         }
     }
 
@@ -68,7 +68,7 @@ class NotasController extends ApiController
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
             $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
-            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
+            return $this->errorResponse('Error de validación',  $firstError, 422);
         }
 
         try {
@@ -78,7 +78,7 @@ class NotasController extends ApiController
 
             return $this->successResponse('Notas obtenidas correctamente', $notas);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al obtener las notas', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al obtener las notas',  $e->getMessage(), 500);
         }
     }
 }

@@ -21,7 +21,7 @@ class CargosController extends ApiController
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
             $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
-            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
+            return $this->errorResponse('Error de validación',  $firstError, 422);
         }
 
         try {
@@ -32,7 +32,7 @@ class CargosController extends ApiController
 
             return $this->successResponse('Cargo actualizado correctamente');
         } catch (Exception $e) {
-            return $this->errorResponse('Error al actualizar el cargo', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al actualizar el cargo',  $e->getMessage(), 500);
         }
     }
 
@@ -42,7 +42,7 @@ class CargosController extends ApiController
             $cargos = Cargos::all();
             return $this->successResponse('Cargos obtenidos correctamente', $cargos);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al obtener los cargos', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al obtener los cargos',  $e->getMessage(), 500);
         }
     }
 
@@ -55,7 +55,7 @@ class CargosController extends ApiController
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
             $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
-            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
+            return $this->errorResponse('Error de validación',  $firstError, 422);
         }
 
         $servicio = $request->servicio;
@@ -68,12 +68,12 @@ class CargosController extends ApiController
             $cargo = Cargos::find($servicio);
 
             if (!$cargo) {
-                return $this->errorResponse('Cargo no encontrado', ['detalle' => 'No existe un cargo con el ID proporcionado'], 404);
+                return $this->errorResponse('Cargo no encontrado',  'No existe un cargo con el ID proporcionado', 404);
             }
 
             return $this->successResponse('Cargo obtenido correctamente', $cargo);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al obtener el cargo', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al obtener el cargo',  $e->getMessage(), 500);
         }
     }
 }

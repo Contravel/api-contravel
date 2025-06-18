@@ -26,6 +26,8 @@ Route::prefix('login')->group(function () {
 Route::prefix('bitacora')->group(function () {
     Route::get('getServices', [ResourceController::class, 'getServices'])->middleware('check.bearer')->name('api.bitacora.services');
     Route::get('getUser', [ResourceController::class, 'getUser'])->middleware('check.bearer')->name('api.bitacora.user');
+
+
     Route::post('updateStatus', [SeguimientosController::class, 'updateStatus'])->name('api.agencias.status');
     Route::post('updateCargo', [CargosController::class, 'updateCargo'])->name('api.agencias.segcargo');
     Route::post('saveTarjeta', [TarjetasController::class, 'saveTarjeta'])->name('api.agencias.tarjetas');

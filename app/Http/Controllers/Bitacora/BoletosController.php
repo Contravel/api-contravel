@@ -23,7 +23,7 @@ class BoletosController extends ApiController
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
             $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
-            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
+            return $this->errorResponse('Error de validación', $firstError, 422);
         }
 
         try {
@@ -43,7 +43,7 @@ class BoletosController extends ApiController
 
             return $this->successResponse('Boletos guardados correctamente');
         } catch (Exception $e) {
-            return $this->errorResponse('Error al guardar boletos', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al guardar boletos',  $e->getMessage(), 500);
         }
     }
 
@@ -56,7 +56,7 @@ class BoletosController extends ApiController
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
             $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
-            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
+            return $this->errorResponse('Error de validación', $firstError, 422);
         }
 
         try {
@@ -65,14 +65,14 @@ class BoletosController extends ApiController
             if ($deleted === 0) {
                 return $this->errorResponse(
                     'No se encontraron boletos para eliminar',
-                    ['detalle' => 'No se encontraron boletos con ese ID de bitácora'],
+                    'No se encontraron boletos con ese ID de bitácora',
                     404
                 );
             }
 
             return $this->successResponse('Boletos eliminados correctamente');
         } catch (Exception $e) {
-            return $this->errorResponse('Error al eliminar boletos', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al eliminar boletos',  $e->getMessage(), 500);
         }
     }
 
@@ -85,7 +85,7 @@ class BoletosController extends ApiController
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
             $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
-            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
+            return $this->errorResponse('Error de validación',  $firstError, 422);
         }
 
         try {
@@ -95,7 +95,7 @@ class BoletosController extends ApiController
 
             return $this->successResponse('Boletos obtenidos correctamente', $boletos);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al obtener los boletos', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al obtener los boletos',  $e->getMessage(), 500);
         }
     }
 
@@ -108,21 +108,21 @@ class BoletosController extends ApiController
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
             $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
-            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
+            return $this->errorResponse('Error de validación', $firstError, 422);
         }
 
         try {
             $boleto = Boletos::where('id_boleto', $request->id)->first();
 
             if (!$boleto) {
-                return $this->errorResponse('Boleto no encontrado', ['detalle' => 'No existe el boleto con el ID proporcionado'], 404);
+                return $this->errorResponse('Boleto no encontrado',  'No existe el boleto con el ID proporcionado', 404);
             }
 
             $boleto->delete();
 
             return $this->successResponse('Boleto eliminado correctamente');
         } catch (Exception $e) {
-            return $this->errorResponse('Error al eliminar el boleto', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al eliminar el boleto',  $e->getMessage(), 500);
         }
     }
 }

@@ -24,7 +24,7 @@ class SeguimientosController extends ApiController
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
             $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
-            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
+            return $this->errorResponse('Error de validación',  $firstError, 422);
         }
 
         $idBitacora = $request->idBitacora;
@@ -44,7 +44,7 @@ class SeguimientosController extends ApiController
             $seguimiento = Seguimientos::find($idBitacora);
 
             if (!$seguimiento) {
-                return $this->errorResponse('Seguimiento no encontrado', ['detalle' => 'ID inválido'], 404);
+                return $this->errorResponse('Seguimiento no encontrado', 'ID inválido', 404);
             }
 
             $seguimiento->estatus = $estatus;
@@ -57,7 +57,7 @@ class SeguimientosController extends ApiController
 
             return $this->successResponse('Estatus actualizado correctamente', []);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al actualizar el estatus', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al actualizar el estatus',  $e->getMessage(), 500);
         }
     }
 
@@ -73,7 +73,7 @@ class SeguimientosController extends ApiController
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
             $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
-            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
+            return $this->errorResponse('Error de validación',  $firstError, 422);
         }
 
         try {
@@ -93,9 +93,9 @@ class SeguimientosController extends ApiController
             $nota = "Se creó nueva bitácora para " . $request->nomCliente;
             NotasController::guardarNotaDirecta($nota, $idBitacora);
 
-            return $this->successResponse('Bitácora creada correctamente', ['id_bitacora' => $idBitacora]);
+            return $this->successResponse('Bitácora creada correctamente',  $idBitacora);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al guardar la bitácora', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al guardar la bitácora',  $e->getMessage(), 500);
         }
     }
 
@@ -108,21 +108,21 @@ class SeguimientosController extends ApiController
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
             $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
-            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
+            return $this->errorResponse('Error de validación',  $firstError, 422);
         }
 
         try {
             $bitacora = Seguimientos::find($request->id);
 
             if (!$bitacora) {
-                return $this->errorResponse('Registro no encontrado', ['detalle' => 'ID inválido'], 404);
+                return $this->errorResponse('Registro no encontrado',  'ID inválid', 404);
             }
 
             $bitacora->delete();
 
             return $this->successResponse('Registro eliminado correctamente', []);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al eliminar el registro', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al eliminar el registro',  $e->getMessage(), 500);
         }
     }
 
@@ -142,7 +142,7 @@ class SeguimientosController extends ApiController
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
             $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
-            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
+            return $this->errorResponse('Error de validación',  $firstError, 422);
         }
 
         $user = auth()->user();
@@ -169,7 +169,7 @@ class SeguimientosController extends ApiController
 
             return $this->successResponse('Cotización guardada correctamente', []);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al guardar la cotización', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al guardar la cotización',  $e->getMessage(), 500);
         }
     }
 
@@ -182,19 +182,19 @@ class SeguimientosController extends ApiController
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
             $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
-            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
+            return $this->errorResponse('Error de validación',  $firstError, 422);
         }
 
         try {
             $seguimiento = Seguimientos::select('estatus')->find($request->id);
 
             if (!$seguimiento) {
-                return $this->errorResponse('Seguimiento no encontrado', ['detalle' => 'ID inválido'], 404);
+                return $this->errorResponse('Seguimiento no encontrado',  'ID inválid', 404);
             }
 
-            return $this->successResponse('Estatus obtenido correctamente', ['estatus' => $seguimiento->estatus]);
+            return $this->successResponse('Estatus obtenido correctamente',  $seguimiento->estatus);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al obtener el estatus', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al obtener el estatus',  $e->getMessage(), 500);
         }
     }
 
@@ -207,7 +207,7 @@ class SeguimientosController extends ApiController
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
             $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
-            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
+            return $this->errorResponse('Error de validación',  $firstError, 422);
         }
 
         $user = $request->user;
@@ -227,9 +227,9 @@ class SeguimientosController extends ApiController
 
             $bitacoras = $query->get();
 
-            return $this->successResponse('Bitácoras obtenidas correctamente', ['data' => $bitacoras]);
+            return $this->successResponse('Bitácoras obtenidas correctamente', $bitacoras);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al obtener las bitácoras', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al obtener las bitácoras',  $e->getMessage(), 500);
         }
     }
 }

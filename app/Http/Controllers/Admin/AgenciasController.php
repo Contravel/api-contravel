@@ -17,7 +17,7 @@ class AgenciasController extends ApiController
 
             return $this->successResponse('Clientes obtenidos correctamente', $clientes);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al obtener los clientes', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al obtener los clientes', $e->getMessage(), 500);
         }
     }
 }

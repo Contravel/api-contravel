@@ -28,9 +28,9 @@ class PermisosController extends ApiController
             // Buscar los permisos del usuario
             $permisos = Users_permiso::where('user', $request->usuario)->pluck('permiso');
 
-            return $this->successResponse('Permisos obtenidos correctamente', ['permisos' => $permisos], 200);
+            return $this->successResponse('Permisos obtenidos correctamente',  $permisos, 200);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al obtener permisos', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al obtener permisos',  $e->getMessage(), 500);
         }
     }
 
@@ -60,7 +60,7 @@ class PermisosController extends ApiController
             $datos = json_decode($response->getBody());
 
             if ($datos->status !== 'true') {
-                return $this->errorResponse('Autenticación fallida', ['message' => $datos->message ?? 'Credenciales inválidas'], 401);
+                return $this->errorResponse('Autenticación fallida', $datos->message ?? 'Credenciales inválidas', 401);
             }
 
             // Sesión de usuario
@@ -81,7 +81,7 @@ class PermisosController extends ApiController
 
             return $this->successResponse('Autenticación exitosa', session()->all(), 200);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al autenticar con Iris', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al autenticar con Iris',  $e->getMessage(), 500);
         }
     }
 
@@ -98,7 +98,7 @@ class PermisosController extends ApiController
 
             return ['success' => true];
         } catch (Exception $e) {
-            return $this->errorResponse('Error al consultar permiso local', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al consultar permiso local',  $e->getMessage(), 500);
         }
     }
 
@@ -111,7 +111,7 @@ class PermisosController extends ApiController
             ]);
             return ['success' => true];
         } catch (Exception $e) {
-            return $this->errorResponse('Error al asignar permiso local', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al asignar permiso local',  $e->getMessage(), 500);
         }
     }
 
@@ -126,7 +126,7 @@ class PermisosController extends ApiController
 
             return ['success' => true];
         } catch (Exception $e) {
-            return $this->errorResponse('Error al consultar permiso', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al consultar permiso',  $e->getMessage(), 500);
         }
     }
 
@@ -139,7 +139,7 @@ class PermisosController extends ApiController
             ]);
             return ['success' => true];
         } catch (Exception $e) {
-            return $this->errorResponse('Error al asignar permiso', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al asignar permiso',  $e->getMessage(), 500);
         }
     }
 }

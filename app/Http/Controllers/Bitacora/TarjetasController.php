@@ -23,7 +23,7 @@ class TarjetasController extends ApiController
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
             $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
-            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
+            return $this->errorResponse('Error de validación',  $firstError, 422);
         }
 
         try {
@@ -41,7 +41,7 @@ class TarjetasController extends ApiController
 
             return $this->successResponse('Tarjeta guardada correctamente');
         } catch (Exception $e) {
-            return $this->errorResponse('Error al guardar la tarjeta', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al guardar la tarjeta',  $e->getMessage(), 500);
         }
     }
 
@@ -54,7 +54,7 @@ class TarjetasController extends ApiController
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
             $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
-            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
+            return $this->errorResponse('Error de validación',  $firstError, 422);
         }
 
         try {
@@ -62,7 +62,7 @@ class TarjetasController extends ApiController
 
             return $this->successResponse('Tarjetas eliminadas correctamente');
         } catch (Exception $e) {
-            return $this->errorResponse('Error al eliminar tarjetas', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al eliminar tarjetas',  $e->getMessage(), 500);
         }
     }
 
@@ -75,7 +75,7 @@ class TarjetasController extends ApiController
         if ($validated->fails()) {
             $errors = $validated->errors()->toArray();
             $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
-            return $this->errorResponse('Error de validación', ['detalle' => $firstError], 422);
+            return $this->errorResponse('Error de validación',  $firstError, 422);
         }
 
         try {
@@ -83,7 +83,7 @@ class TarjetasController extends ApiController
             $tarjeta = Tarjetas::where('id_bitacora', $id)->first();
 
             if (!$tarjeta) {
-                return $this->errorResponse('Tarjeta no encontrada', ['detalle' => 'No existe tarjeta para el ID proporcionado'], 404);
+                return $this->errorResponse('Tarjeta no encontrada',  'No existe arjeta para el ID proporcionado', 404);
             }
 
             $encrypt_method = "AES-128-ECB";
@@ -92,7 +92,7 @@ class TarjetasController extends ApiController
 
             return $this->successResponse('Tarjeta obtenida correctamente', $tarjeta);
         } catch (Exception $e) {
-            return $this->errorResponse('Error al obtener la tarjeta', ['exception' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al obtener la tarjeta',  $e->getMessage(), 500);
         }
     }
 }
