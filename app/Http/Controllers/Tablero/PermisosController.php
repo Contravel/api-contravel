@@ -13,20 +13,10 @@ class PermisosController extends ApiController
 {
     public function obtenerPermisos(Request $request)
     {
-        // Validar que el campo 'usuario' venga en la petición
-        $validated = Validator::make($request->all(), [
-            'usuario' => 'required|string|max:255',
-        ]);
-
-        if ($validated->fails()) {
-            $errors = $validated->errors()->toArray();
-            $firstError = is_array($errors) && count($errors) > 0 ? array_values($errors)[0] : ['Error desconocido'];
-            return $this->errorResponse('Error de validación', $firstError[0], 422);
-        }
 
         try {
             // Buscar los permisos del usuario
-            $permisos = Users_permiso::where('user', $request->usuario)->pluck('permiso');
+            $permisos = Users_permiso::all();
 
             return $this->successResponse('Permisos obtenidos correctamente',  $permisos, 200);
         } catch (Exception $e) {

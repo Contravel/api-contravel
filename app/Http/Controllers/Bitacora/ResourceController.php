@@ -35,8 +35,6 @@ class ResourceController extends ApiController
     {
         $payloadJWT = $this->validateToken($request->bearerToken());
 
-        Log::info(json_encode($payloadJWT));
-
         if ($payloadJWT->status === true) {
             return $this->successResponse('Usuario obtenido correctamente', $payloadJWT);
         }

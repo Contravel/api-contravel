@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Bitacora;
 
-use Exception;
-use App\Traits\TokenManage;
-use Illuminate\Http\Request;
-use App\Models\bitacora\Seguimientos;
 use App\Http\Controllers\ApiController;
-use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\Bitacora\NotasController;
+use App\Http\Controllers\Bitacora\ResourceController;
+use App\Models\bitacora\Seguimientos;
+use App\Models\tablero\Users_permiso;
+use App\Traits\TokenManage;
+use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class SeguimientosController extends ApiController
 {
@@ -200,21 +203,14 @@ class SeguimientosController extends ApiController
 
     public function obtenerBitacoras(Request $request)
     {
-        $validated = Validator::make($request->all(), [
-            'user' => 'required|string',
-        ]);
 
-        if ($validated->fails()) {
-            $errors = $validated->errors()->toArray();
-            $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
-            return $this->errorResponse('Error de validación',  $firstError, 422);
-        }
-
-        $user = $request->user;
-
+        $resource = new ResourceController();
+        $function = $resource->getUser($request)->getContent();
+        $data = json_decode($function, true);
+        $user = $data['data']['token']['id'];
         try {
             $admin = $this->validarAdmin($user);
-
+            Log::debug($admin);
             $query = Seguimientos::with([
                 'servicio:id,servicio',
                 'status:id,descripcion,color',
@@ -230,6 +226,19 @@ class SeguimientosController extends ApiController
             return $this->successResponse('Bitácoras obtenidas correctamente', $bitacoras);
         } catch (Exception $e) {
             return $this->errorResponse('Error al obtener las bitácoras',  $e->getMessage(), 500);
+        }
+    }
+
+    public function validarAdmin($user)
+    {
+        $admin = Users_permiso::where('user', $user)
+            ->where('permiso', 3)
+            ->exists();
+
+        if ($admin) {
+            return true;
+        } else {
+            return false;
         }
     }
 }

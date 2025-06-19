@@ -38,13 +38,13 @@ Route::prefix('bitacora')->group(function () {
     Route::post('obtenerTipoPago', [TipoPagoController::class, 'obtenerPagos'])->name('api.agencias.pagos');
     Route::post('obtenerTarjeta', [TarjetasController::class, 'obtenerTarjeta'])->name('api.agencias.obtarjetas');
     Route::post('obtenerServicios', [ResourceController::class, 'obtenerServicios'])->name('api.agencias.servicios');
-    Route::post('obtenerPermisos', [PermisosController::class, 'obtenerPermisos'])->name('api.agencias.permisos');
+    Route::get('obtenerPermisos', [PermisosController::class, 'obtenerPermisos'])->name('api.agencias.permisos');
     Route::post('obtenerNotas', [NotasController::class, 'obtenerNotas'])->name('api.agencias.obnotas');
     Route::post('obtenerEstatus', [SeguimientosController::class, 'ObtenerEstatus'])->name('api.agencias.obstatus');
     Route::post('obtenerCargos', [CargosController::class, 'obtenerCargos'])->name('api.agencias.obcargo');
     Route::post('obtenerCargoByServicio', [CargosController::class, 'obtenerCargoByServicio'])->name('api.agencias.obcxs');
     Route::post('obtenerBoletos', [BoletosController::class, 'obtenerBoletos'])->name('api.agencias.obboletos');
-    Route::post('obtenerBitacoras', [SeguimientosController::class, 'obtenerBitacoras'])->name('api.agencias.obbitacora');
+    Route::get('obtenerBitacoras', [SeguimientosController::class, 'obtenerBitacoras'])->name('api.agencias.obbitacora');
     Route::post('obtenerAgencias', [AgenciasController::class, 'obtenerClientes'])->name('api.agencias.obbitacora');
     Route::post('generaReporte', [ReporteController::class, 'crearReporte'])->name('api.agencias.reporte');
     Route::post('eliminarBoleto', [BoletosController::class, 'eliminarBoleto'])->name('api.agencias.delboletos');

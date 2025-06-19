@@ -136,8 +136,8 @@ class LoginController extends ApiController
 
     public function loginContravel(Request $request)
     {
-        $api = self::apiRoyal($request)->getData(true);
-
+        //$api = self::apiRoyal($request)->getData(true);
+        $api = self::apiIris($request)->getData(true);
         if (!$api['success']) {
             return $api;
         }

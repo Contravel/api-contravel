@@ -2,6 +2,10 @@
 
 namespace App\Models\bitacora;
 
+use App\Models\bitacora\Boletos;
+use App\Models\bitacora\SeguimientoCargos;
+use App\Models\bitacora\Servicio;
+use App\Models\bitacora\Status;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -26,20 +30,20 @@ class Seguimientos extends Model
     // Relaciones
     public function servicio()
     {
-        return $this->belongsTo(\App\Models\bitacora\Servicio::class, 'id_servicio');
+        return $this->belongsTo(Servicio::class, 'id_servicio');
     }
 
     public function status()
     {
-        return $this->belongsTo(\App\Models\bitacora\Status::class, 'estatus');
+        return $this->belongsTo(Status::class, 'estatus');
     }
 
     public function cargo()
     {
-        return $this->hasOne(\App\Models\bitacora\SeguimientoCargos::class, 'seguimiento');
+        return $this->hasOne(SeguimientoCargos::class, 'seguimiento');
     }
     public function boletos()
     {
-        return $this->hasMany(\App\Models\bitacora\Boletos::class, 'id_bitacora');
+        return $this->hasMany(Boletos::class, 'id_bitacora');
     }
 }
