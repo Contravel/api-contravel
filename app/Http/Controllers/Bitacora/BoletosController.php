@@ -6,6 +6,7 @@ use Exception;
 use Illuminate\Http\Request;
 use App\Models\bitacora\Boletos;
 use App\Http\Controllers\ApiController;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class BoletosController extends ApiController
@@ -102,7 +103,7 @@ class BoletosController extends ApiController
     public function eliminarBoleto(Request $request)
     {
         $validated = Validator::make($request->all(), [
-            'id' => 'required|integer|exists:tbl_boletos,id_boleto',
+            'id' => 'required',
         ]);
 
         if ($validated->fails()) {
@@ -113,7 +114,7 @@ class BoletosController extends ApiController
 
         try {
             $boleto = Boletos::where('id_boleto', $request->id)->first();
-
+            Log::info($boleto);
             if (!$boleto) {
                 return $this->errorResponse('Boleto no encontrado',  'No existe el boleto con el ID proporcionado', 404);
             }
@@ -123,6 +124,37 @@ class BoletosController extends ApiController
             return $this->successResponse('Boleto eliminado correctamente');
         } catch (Exception $e) {
             return $this->errorResponse('Error al eliminar el boleto',  $e->getMessage(), 500);
+        }
+    }
+
+    public function saveBoleto(Request $request)
+    {
+        $validated = Validator::make($request->all(), [
+            'id',
+            'concepto',
+            'cargo',
+            'boleto',
+        ]);
+
+        if ($validated->fails()) {
+            $errors = $validated->errors()->toArray();
+            $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
+            return $this->errorResponse('Error de validación', $firstError, 422);
+        }
+
+        try {
+            $cargoMasIva = round($request->cargo * 1.16);
+
+            $boleto = new Boletos();
+            $boleto->id_boleto   = $request->boleto;
+            $boleto->id_bitacora = $request->id;
+            $boleto->concepto    = $request->concepto;
+            $boleto->cargo       = $cargoMasIva;
+            $boleto->save();
+
+            return $this->successResponse('Boleto guardado correctamente');
+        } catch (Exception $e) {
+            return $this->errorResponse('Error al guardar el boleto',  $e->getMessage(), 500);
         }
     }
 }

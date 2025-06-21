@@ -18,10 +18,10 @@ class SeguimientosController extends ApiController
     public function updateStatus(Request $request)
     {
         $validated = Validator::make($request->all(), [
-            'idBitacora' => 'required|integer',
-            'nota' => 'required|string',
-            'estatus' => 'required|string',
-            'historico' => 'required|integer',
+            'idBitacora' => 'required',
+            'nota',
+            'estatus' => 'required',
+            'historico',
         ]);
 
         if ($validated->fails()) {
@@ -37,10 +37,12 @@ class SeguimientosController extends ApiController
 
         $saveNota = is_null($nota) || $nota === ''
             ? true
-            : NotasController::guardarNotaDirecta($nota, $idBitacora);
+            : NotasController::guardarNotaDirecta($nota, $idBitacora, $request);
 
         if (!$saveNota) {
-            return $this->errorResponse('No se pudo guardar la nota', [], 400);
+            return $this->errorResponse('No se pudo guardar la nota', "Error al guardar la nota", 400);
+        }else if($estatus == 3){
+            $saveNota = NotasController::guardarNotaDirecta("Bitacora Cancelada", $idBitacora, $request);
         }
 
         try {
@@ -58,7 +60,7 @@ class SeguimientosController extends ApiController
 
             $seguimiento->save();
 
-            return $this->successResponse('Estatus actualizado correctamente', []);
+            return $this->successResponse('Estatus actualizado correctamente');
         } catch (Exception $e) {
             return $this->errorResponse('Error al actualizar el estatus',  $e->getMessage(), 500);
         }
@@ -94,7 +96,7 @@ class SeguimientosController extends ApiController
             $idBitacora = $seguimiento->id;
 
             $nota = "Se creó nueva bitácora para " . $request->nomCliente;
-            NotasController::guardarNotaDirecta($nota, $idBitacora);
+            NotasController::guardarNotaDirecta($nota, $idBitacora, $request);
 
             return $this->successResponse('Bitácora creada correctamente',  $idBitacora);
         } catch (Exception $e) {
@@ -126,53 +128,6 @@ class SeguimientosController extends ApiController
             return $this->successResponse('Registro eliminado correctamente', []);
         } catch (Exception $e) {
             return $this->errorResponse('Error al eliminar el registro',  $e->getMessage(), 500);
-        }
-    }
-
-    public function saveCotizacionBitacora(Request $request)
-    {
-        $validated = Validator::make($request->all(), [
-            'pnr' => 'required|string',
-            'cveAgencia' => 'required|string',
-            'nomCliente' => 'required|string',
-            'servicio' => 'required|integer',
-            'cargo' => 'required|array|min:1',
-            'cargo.0' => 'required|array',
-            'cargo.0.boleto' => 'nullable',
-            'status' => 'required|string',
-        ]);
-
-        if ($validated->fails()) {
-            $errors = $validated->errors()->toArray();
-            $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
-            return $this->errorResponse('Error de validación',  $firstError, 422);
-        }
-
-        $user = auth()->user();
-
-        try {
-            $seguimiento = new Seguimientos();
-            $seguimiento->pnr = $request->pnr;
-            $seguimiento->cve_agencia = $request->cveAgencia;
-            $seguimiento->nombre_agencia = $request->nomCliente;
-            $seguimiento->user = $user->usuario ?? 'sistema';
-            $seguimiento->id_servicio = $request->servicio;
-            $seguimiento->estatus = $request->status;
-            $seguimiento->save();
-
-            $idBitacora = $seguimiento->id;
-
-            $cargo = $request->cargo;
-            $cargo[0]['boleto'] = now()->timestamp;
-
-            $this->saveBoletos($cargo, $idBitacora);
-
-            $nota = 'Se creó nueva Cotización para ' . $request->nomCliente;
-            $this->saveNotas($nota, $idBitacora);
-
-            return $this->successResponse('Cotización guardada correctamente', []);
-        } catch (Exception $e) {
-            return $this->errorResponse('Error al guardar la cotización',  $e->getMessage(), 500);
         }
     }
 
@@ -228,7 +183,6 @@ class SeguimientosController extends ApiController
             return $this->errorResponse('Error al obtener las bitácoras',  $e->getMessage(), 500);
         }
     }
-
     public function validarAdmin($user)
     {
         $admin = Users_permiso::where('user', $user)

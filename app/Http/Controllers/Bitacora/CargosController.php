@@ -14,8 +14,8 @@ class CargosController extends ApiController
     public function updateCargo(Request $request)
     {
         $validated = Validator::make($request->all(), [
-            'bitacora' => 'required|integer',
-            'cuenta' => 'required|string|max:255',
+            'bitacora' => 'required',
+            'cuenta' => 'required',
         ]);
 
         if ($validated->fails()) {
@@ -30,7 +30,7 @@ class CargosController extends ApiController
             $cargo->numCargo = $request->cuenta;
             $cargo->save();
 
-            return $this->successResponse('Cargo actualizado correctamente');
+            return $this->successResponse('Cargo actualizado correctamente', $cargo);
         } catch (Exception $e) {
             return $this->errorResponse('Error al actualizar el cargo',  $e->getMessage(), 500);
         }

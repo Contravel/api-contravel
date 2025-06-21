@@ -247,4 +247,22 @@ class LoginController extends ApiController
             return $this->errorResponse("Sesión Error", 'Error general: ' . $e->getMessage(), 500);
         }
     }
+
+    public function renewToken(Request $request)
+    {
+        $payloadJWT = $this->validateToken($request->bearerToken());
+
+
+        Log::debug(json_encode($payloadJWT));
+        if ($payloadJWT->status) {
+            $newToken = $this->generateToken(
+                $payloadJWT->token->id,
+                $payloadJWT->token->sub,
+                $payloadJWT->token->uuid
+            );
+            return $this->successResponse('Token renovado correctamente', $newToken);
+        } else {
+            return $this->errorResponse('Error al actualizar Token', $payloadJWT->message, 401);
+        }
+    }
 }

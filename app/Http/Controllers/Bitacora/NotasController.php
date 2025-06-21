@@ -26,12 +26,15 @@ class NotasController extends ApiController
         }
 
         try {
-            $usuario = auth()->user();
+            $resource = new ResourceController();
+            $function = $resource->getUser($request)->getContent();
+            $data = json_decode($function, true);
+            $user = $data['data']['token']['sub'];
 
             $nota = new Notas();
             $nota->id_bitacora = $request->id_bitacora;
             $nota->nota = $request->nota;
-            $nota->user = $usuario->usuario ?? 'sistema';
+            $nota->user = $user;
             $nota->save();
 
             return $this->successResponse('Nota guardada correctamente');
@@ -41,15 +44,18 @@ class NotasController extends ApiController
     }
 
     // Método reutilizable desde otros controladores
-    public static function guardarNotaDirecta($notaTexto, $idBitacora)
+    public static function guardarNotaDirecta($notaTexto, $idBitacora, $request)
     {
         try {
-            $usuario = auth()->user();
+            $resource = new ResourceController();
+            $function = $resource->getUser($request)->getContent();
+            $data = json_decode($function, true);
+            $user = $data['data']['token']['sub'];
 
             $nota = new Notas();
             $nota->id_bitacora = $idBitacora;
             $nota->nota = $notaTexto;
-            $nota->user = $usuario->usuario ?? 'sistema';
+            $nota->user = $user;
             $nota->save();
 
             return true;

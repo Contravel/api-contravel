@@ -3,17 +3,17 @@
 namespace App\Http\Controllers\Bitacora;
 
 use App\Http\Controllers\ApiController;
-use App\Models\bitacora\Servicio;
-use Illuminate\Http\Request;
-use App\Traits\TokenManage;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
-use App\Models\bitacora\Seguimientos;
 use App\Models\bitacora\Boletos;
-use App\Models\bitacora\Tarjetas;
 use App\Models\bitacora\Notas;
+use App\Models\bitacora\Seguimientos;
+use App\Models\bitacora\Servicio;
+use App\Models\bitacora\Tarjetas;
+use App\Traits\TokenManage;
 use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class ResourceController extends ApiController
 {
@@ -47,7 +47,7 @@ class ResourceController extends ApiController
         $validated = Validator::make($request->all(), [
             'dataBitacora' => 'required|array',
             'dataBank'     => 'required|array',
-            'notas'        => 'required|array',
+            'notas'        => 'required',
             'listBoletos'  => 'required|array',
         ]);
 
@@ -58,26 +58,43 @@ class ResourceController extends ApiController
         }
 
         DB::connection('mysql3')->beginTransaction();
-
         try {
+
+            $resource = new ResourceController();
+            $function = $resource->getUser($request)->getContent();
+            $data = json_decode($function, true);
+            $user = $data['data']['token']['sub'];
             // 1. Guardar seguimiento
-            $bitacora = Seguimientos::create($request->dataBitacora);
+            $bitacora = new Seguimientos();
+            $bitacora->pnr = $request->dataBitacora['pnr'];
+            $bitacora->cve_agencia = $request->dataBitacora['cveAgencia'];
+            $bitacora->nombre_agencia = $request->dataBitacora['nomCliente'];
+            $bitacora->user = $user;
+            $bitacora->id_servicio = $request->dataBitacora['servicio'];
+            $bitacora->estatus = 1;
+            $bitacora->save();
 
             // 2. Guardar boletos
             foreach ($request->listBoletos as $boleto) {
                 $boleto['id_bitacora'] = $bitacora->id;
+                $boleto['id_boleto'] = $boleto['boleto'];
+                $boleto['concepto'] = $boleto['cargo'];
+                $boleto['cargo'] = round($boleto['precio'] * 1.16);
                 Boletos::create($boleto);
             }
 
             // 3. Guardar tarjeta
             $tarjeta = $request->dataBank;
             $tarjeta['id_bitacora'] = $bitacora->id;
+            $tarjeta['tipo_tarjeta'] = $tarjeta['tipoTarjeta'];
             Tarjetas::create($tarjeta);
 
             // 4. Guardar nota
-            $nota = $request->notas;
-            $nota['id_bitacora'] = $bitacora->id;
-            Notas::create($nota);
+            $nota = new Notas();
+            $nota->id_bitacora = $bitacora->id;
+            $nota->nota = $request->notas;
+            $nota->user = $user;
+            $nota->save();
 
             DB::connection('mysql3')->commit();
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ReporteSeguimientosExport;
 use Exception;
 use Illuminate\Http\Request;
 use App\Models\bitacora\Seguimientos;
@@ -11,15 +12,18 @@ use Illuminate\Support\Facades\Validator;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Exception as WriterException;
 use App\Http\Controllers\ApiController;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReporteController extends ApiController
 {
 
     public function crearReporte(Request $request)
     {
-        $validated = Validator::make($request->all(), [
+        $validated = Validator::make($request->query(), [
             'inicio' => 'required|date',
-            'final' => 'required|date|after_or_equal:inicio',
+            'final' => 'required|date',
         ]);
 
         if ($validated->fails()) {
@@ -27,70 +31,41 @@ class ReporteController extends ApiController
             $firstError = is_array($errors) && count($errors) > 0 ? array_values($errors)[0] : ['Error desconocido'];
             return $this->errorResponse('Error de validación', $firstError[0], 422);
         }
-
+        $startDate = Carbon::parse($request->inicio)->startOfDay();
+        $endDate = Carbon::parse($request->final)->endOfDay();
+        Log::debug('Fechas de inicio y fin del reporte', [
+            'inicio' => $startDate,
+            'final' => $endDate
+        ]);
         try {
             // 1. Obtener los datos
-            $data = Seguimientos::with(['servicio', 'status', 'cargo', 'boletos'])
-                ->whereHas('cargo', function ($query) use ($request) {
-                    $query->whereBetween('fecha_registro', [$request->inicio, $request->final]);
-                })
-                ->get()
-                ->map(function ($seguimiento) {
-                    return [
-                        'pnr' => $seguimiento->pnr,
-                        'id_boleto' => optional($seguimiento->boletos->first())->id_boleto,
-                        'cve_agencia' => $seguimiento->cve_agencia,
-                        'nombre_agencia' => $seguimiento->nombre_agencia,
-                        'servicio' => optional($seguimiento->servicio)->servicio,
-                        'user' => $seguimiento->user,
-                        'descripcion' => optional($seguimiento->status)->descripcion,
-                        'concepto' => optional($seguimiento->boletos->first())->concepto,
-                        'numCargo' => optional($seguimiento->cargo)->numCargo,
-                        'cargo' => optional($seguimiento->boletos->first())->cargo,
-                        'fecha_registro' => optional($seguimiento->cargo)->fecha_registro,
-                    ];
-                });
-
+            $data = Seguimientos::select(
+                'tbl_seguimientos.pnr',
+                'tbl_seguimientos.cve_agencia',
+                'tbl_seguimientos.nombre_agencia',
+                'tbl_seguimientos.user',
+                'tbl_boletos.id_boleto',
+                'tbl_boletos.cargo',
+                'tbl_boletos.concepto',
+                'servicios.servicio',
+                'tbl_status.descripcion',
+                'seguimiento_cargo.numCargo',
+                'seguimiento_cargo.fecha_registro'
+            )
+                ->join('servicios', 'tbl_seguimientos.id_servicio', '=', 'servicios.id')
+                ->join('tbl_status', 'tbl_seguimientos.estatus', '=', 'tbl_status.id')
+                ->leftJoin('seguimiento_cargo', 'tbl_seguimientos.id', '=', 'seguimiento_cargo.seguimiento')
+                ->leftJoin('tbl_boletos', 'tbl_seguimientos.id', '=', 'tbl_boletos.id_bitacora')
+                ->whereBetween('seguimiento_cargo.fecha_registro', [$startDate, $endDate])
+                ->get();
+                Log::debug('Datos obtenidos para el reporte', ['data' => $data]);
             if ($data->isEmpty()) {
-                return response()->json([
-                    'error' => 1045,
-                    'Desc' => 'No se puede generar Reporte, No se encontraron resultados'
-                ]);
+                return $this->errorResponse('Error al generar el reporte', 'No se encontraron resultados, no se genero reporte', 500);
             }
 
-            // 2. Generar archivo CSV
-            $spreadsheet = new Spreadsheet();
-            $sheet = $spreadsheet->getActiveSheet();
+            $nombreArchivo = 'reporte_' . now()->format('Y_m_d_His') . '.xlsx';
 
-            // Cabeceras
-            $sheet->fromArray([
-                ["PNR", "BOLETO", "CLAVE AGENCIA", "NOMBRE AGENCIA", "SERVICIO", "USUARIO", "ESTATUS", "TIPO CARGO", "NO. CARGO", "CARGO", "FECHA DE COBRO"]
-            ], null, 'A1');
-
-            // Datos
-            $sheet->fromArray($data->toArray(), null, 'A2');
-
-            $date_inicio = date('d-m-Y', strtotime($request->inicio));
-            $date_final = date('d-m-Y', strtotime($request->final));
-            $nombre = "REPORTE_" . $date_inicio . "_" . $date_final . ".csv";
-
-            $writer = new Csv($spreadsheet);
-            $writer->setUseBOM(true);
-            $path = storage_path('app/public/reporte_csv/' . $nombre);
-
-            // Crear carpeta si no existe
-            if (!file_exists(dirname($path))) {
-                mkdir(dirname($path), 0755, true);
-            }
-
-            $writer->save($path);
-
-            return response()->json([
-                'error' => 200,
-                'Desc' => 'Reporte creado con éxito',
-                'nombre' => $nombre,
-                'url' => asset("storage/reporte_csv/$nombre")
-            ]);
+            return Excel::download(new ReporteSeguimientosExport($data), $nombreArchivo);
         } catch (Exception $e) {
             return $this->errorResponse('Error al generar el reporte', $e->getMessage(), 500);
         }

@@ -9,9 +9,9 @@ class Boletos extends Model
 {
     protected $connection = 'mysql3';
     protected $table = 'tbl_boletos';
-    protected $primaryKey = 'id';
+    public $incrementing = false;
+    protected $primaryKey = 'id_boleto';
     protected $fillable = [
-        'id_boleto',
         'id_bitacora',
         'concepto',
         'cargo'
