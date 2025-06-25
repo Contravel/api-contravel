@@ -1,17 +1,19 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\contravel_bd;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Users_permiso extends Model
+class Agencia extends Model
 {
+    protected $connection = 'mysql2';
     protected $primaryKey = 'id';
     protected $fillable = [
-        'user',
-        'permiso',
-
+        'id_agencia',
+        'Nombre_razonSo',
+        'email',
+        'Acceso',
     ];
     public $timestamps = false;
 }
