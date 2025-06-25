@@ -59,7 +59,6 @@ class ResourceController extends ApiController
 
         DB::connection('mysql3')->beginTransaction();
         try {
-            Log::debug($request->all());
             $resource = new ResourceController();
             $function = $resource->getUser($request)->getContent();
             $data = json_decode($function, true);
@@ -86,8 +85,11 @@ class ResourceController extends ApiController
 
             // 3. Guardar tarjeta
             $tarjeta = $request->dataBank;
+            $encrypt_method = "AES-128-ECB";
+            $encrypt = openssl_encrypt($tarjeta['tarjeta'], $encrypt_method, $tarjeta['vencimiento']);
             $tarjeta['id_bitacora'] = $bitacora->id;
             $tarjeta['tipo_tarjeta'] = $tarjeta['tipoTarjeta'];
+            $tarjeta['encrypt'] = $encrypt;
             Tarjetas::create($tarjeta);
 
             // 4. Guardar nota
