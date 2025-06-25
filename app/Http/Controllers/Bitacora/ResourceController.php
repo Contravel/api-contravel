@@ -59,7 +59,7 @@ class ResourceController extends ApiController
 
         DB::connection('mysql3')->beginTransaction();
         try {
-
+            Log::debug($request->all());
             $resource = new ResourceController();
             $function = $resource->getUser($request)->getContent();
             $data = json_decode($function, true);
@@ -80,6 +80,7 @@ class ResourceController extends ApiController
                 $boleto['id_boleto'] = $boleto['boleto'];
                 $boleto['concepto'] = $boleto['cargo'];
                 $boleto['cargo'] = round($boleto['precio'] * 1.16);
+                
                 Boletos::create($boleto);
             }
 

@@ -162,9 +162,10 @@ class SeguimientosController extends ApiController
         $resource = new ResourceController();
         $function = $resource->getUser($request)->getContent();
         $data = json_decode($function, true);
-        $user = $data['data']['token']['id'];
+        $id = $data['data']['token']['id'];
+        $user = $data['data']['token']['sub'];
         try {
-            $admin = $this->validarAdmin($user);
+            $admin = $this->validarAdmin($id);
             Log::debug($admin);
             $query = Seguimientos::with([
                 'servicio:id,servicio',
@@ -186,7 +187,7 @@ class SeguimientosController extends ApiController
     public function validarAdmin($user)
     {
         $admin = Users_permiso::where('user', $user)
-            ->where('permiso', 3)
+            ->where('permiso', 4)
             ->exists();
 
         if ($admin) {
