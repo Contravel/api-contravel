@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Tablero;
 
+use App\Http\Controllers\ApiController;
+use App\Http\Controllers\Bitacora\ResourceController;
+use App\Models\tablero\Users_permiso;
 use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
-use App\Http\Controllers\ApiController;
-use App\Models\tablero\Users_permiso;
 use Illuminate\Support\Facades\Validator;
 
 class PermisosController extends ApiController
@@ -15,8 +16,12 @@ class PermisosController extends ApiController
     {
 
         try {
+            $resource = new ResourceController();
+            $function = $resource->getUser($request)->getContent();
+            $data = json_decode($function, true);
+            $user = $data['data']['token']['id'];
             // Buscar los permisos del usuario
-            $permisos = Users_permiso::all();
+            $permisos = Users_permiso::where('user', $user)->get();
 
             return $this->successResponse('Permisos obtenidos correctamente',  $permisos, 200);
         } catch (Exception $e) {

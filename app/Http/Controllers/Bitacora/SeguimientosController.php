@@ -68,6 +68,7 @@ class SeguimientosController extends ApiController
 
     public function saveBitacora(Request $request)
     {
+        
         $validated = Validator::make($request->all(), [
             'pnr' => 'required|string|max:255',
             'cveAgencia' => 'required|string|max:255',
@@ -88,7 +89,7 @@ class SeguimientosController extends ApiController
             $seguimiento->pnr = $request->pnr;
             $seguimiento->cve_agencia = $request->cveAgencia;
             $seguimiento->nombre_agencia = $request->nomCliente;
-            $seguimiento->user = $usuario->usuario ?? 'sistema';
+            $seguimiento->user = $usuario->usuario;
             $seguimiento->id_servicio = $request->servicio;
             $seguimiento->estatus = 1;
             $seguimiento->save();
