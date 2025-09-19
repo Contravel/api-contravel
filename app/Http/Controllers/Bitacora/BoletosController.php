@@ -30,7 +30,6 @@ class BoletosController extends ApiController
         try {
             $idBitacora = $request->idBitacora;
             $listBoletos = $request->listBoletos;
-
             foreach ($listBoletos as $boletoData) {
                 $cargoMasIva = round($boletoData['precio'] * 1.16);
 

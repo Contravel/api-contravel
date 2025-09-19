@@ -56,7 +56,6 @@ class ResourceController extends ApiController
             $firstError = array_values($errors)[0][0] ?? 'Error desconocido';
             return $this->errorResponse('Error de validación',  $firstError, 422);
         }
-
         DB::connection('mysql3')->beginTransaction();
         try {
             $resource = new ResourceController();
@@ -79,7 +78,7 @@ class ResourceController extends ApiController
                 $boleto['id_boleto'] = $boleto['boleto'];
                 $boleto['concepto'] = $boleto['cargo'];
                 $boleto['cargo'] = round($boleto['precio'] * 1.16);
-                
+                Log::debug('Boleto a guardar:', $boleto);
                 Boletos::create($boleto);
             }
 
