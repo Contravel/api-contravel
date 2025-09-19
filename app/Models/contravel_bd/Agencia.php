@@ -16,4 +16,9 @@ class Agencia extends Model
         'Acceso',
     ];
     public $timestamps = false;
+
+    public function users()
+    {
+        return $this->hasMany(Cliente::class, 'id_agencia');
+    }
 }

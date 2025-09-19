@@ -18,4 +18,10 @@ class Cliente extends Model
         'cve_agencia'
     ];
     public $timestamps = false;
+
+    public function agency()
+    {
+        return $this->belongsTo(Agencia::class, 'cve_agencia');
+        // 👆 asegúrate que la FK se llame agency_id (o cámbiala aquí)
+    }
 }

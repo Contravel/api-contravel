@@ -59,14 +59,14 @@ class LoginController extends ApiController
 
             if ($response->successful()) {
                 $data = $response->json();
-                Log::info(json_encode($data));
+                Log::info('Respuesta de API Royal:', $data);
                 if (!empty($data) && isset($data['Status']) && $data['Status'] !== false) {
                     $user = new stdClass();
                     $user->id = $data['AgentId'];
                     $user->agency = $data['DkNumber'];
                     $user->agencyName = $data['AgencyName'];
                     $user->agencyMail = null;
-                    $user->mail = null;
+                    $user->mail = $data['AgentMail'];
                     $user->name = $data['AgentFullName'];
                     $user->token = $data['Token'];
                     return $this->successResponse('Login Success', $user);
@@ -136,8 +136,8 @@ class LoginController extends ApiController
 
     public function loginContravel(Request $request)
     {
-        //$api = self::apiRoyal($request)->getData(true);
-        $api = self::apiIris($request)->getData(true);
+        $api = self::apiRoyal($request)->getData(true);
+        //$api = self::apiIris($request)->getData(true);
         if (!$api['success']) {
             return $api;
         }
@@ -191,16 +191,17 @@ class LoginController extends ApiController
     }
 
     public function loginAgencies(Request $request)
-    {
-        $api = self::apiIris($request)->getData(true);
+    {   
+        $api = self::apiRoyal($request)->getData(true);
+        // $api = self::apiIris($request)->getData(true);
 
         if (!$api['success']) {
             return $api;
         }
 
-        if ($api['data']['agency'] !== "100100" && $api['data']['agency'] !== "030004") {
-            return $this->errorResponse('Unauthorized', 'Sin autorización a plataformas.', 403);
-        }
+        // if ($api['data']['agency'] !== "100100" && $api['data']['agency'] !== "030004") {
+        //     return $this->errorResponse('Unauthorized', 'Sin autorización a plataformas.', 403);
+        // }
 
         $data = $api['data'];
 
@@ -215,7 +216,6 @@ class LoginController extends ApiController
                 ['id_iris' => $data['id']],
                 [
                     'username' => $request->input('user'),
-                    'cifrado' => $hash,
                     'full_name' => $data['name'],
                     'email' => $data['mail'],
                     'cve_agencia' => $data['agency'],
@@ -264,5 +264,16 @@ class LoginController extends ApiController
         } else {
             return $this->errorResponse('Error al actualizar Token', $payloadJWT->message, 401);
         }
+    }
+
+        public function getPayload(Request $request)
+    {
+        $payloadJWT = $this->validateToken($request->bearerToken());
+
+        if ($payloadJWT->status === true) {
+            return $this->successResponse('Usuario obtenido correctamente', $payloadJWT);
+        }
+
+        return $this->errorResponse('Token inválido',  $payloadJWT->message, 401);
     }
 }

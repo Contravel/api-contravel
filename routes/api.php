@@ -15,12 +15,46 @@ use App\Http\Controllers\Bitacora\ResourceController;
 use App\Http\Controllers\Bitacora\TarjetasController;
 use App\Http\Controllers\Bitacora\TipoPagoController;
 use App\Http\Controllers\Bitacora\SeguimientosController;
+use App\Http\Controllers\Operadora\CatalogController;
+use App\Http\Controllers\Operadora\SesionController;
+use App\Http\Controllers\ReCaptchaController;
+
+///////////////PETICIONES PARA RECPATCHA V2 Y V3///////////////////////
+Route::prefix('recaptcha')->group(function () {
+    Route::post('validate-recaptcha-v2', [ReCaptchaController::class, 'validateToken2'])->name('api.recaptcha.v2');
+    Route::post('validate-recaptcha', [ReCaptchaController::class, 'validateToken'])->name('api.recaptcha.v3');
+});
 
 Route::prefix('login')->group(function () {
     Route::post('v1', [LoginController::class, 'loginContravel'])->name('api.contravel.login');
     Route::post('v2', [LoginController::class, 'loginAgencies'])->name('api.agencies.login');
-    Route::get('renewToken', [LoginController::class, 'renewToken'])->middleware('check.bearer')->name('api.bitacora.renew');
+    Route::get('renewToken', [LoginController::class, 'renewToken'])->middleware('check.bearer')->name('api.contravel.renew');
 });
+
+///////////////PETICIONES PROYECTO OPERADORA///////////////////
+Route::prefix('operadora')->group(function () {
+    Route::post('sso_login', [SesionController::class, 'sso_sesion'])->name('operadora.contravel.sso');
+    Route::get('getDataUser', [SesionController::class, 'getDataUser'])->middleware('check.bearer')->name('operadora.contravel.user');
+    Route::get('getServer', [SesionController::class, 'getServer'])->name('operadora.contravel.server');
+    Route::get('getAgencyUser', [SesionController::class, 'getAgencyUser'])->middleware('check.bearer')->name('operadora.contravel.user');
+
+
+    Route::post('updateStatus', [CatalogController::class, 'updateStatus'])->name('api.operadora.updateStatus');
+    Route::get('getLastestOffers', [CatalogController::class, 'getLastestOffers'])->name('api.operadora.getLastestOffers');
+    Route::get('getCatalogDigital', [CatalogController::class, 'getCatalogDigital'])->name('api.operadora.getCatalogDigital');
+    Route::get('getCircuit', [CatalogController::class, 'getCircuit'])->name('api.operadora.getCircuit');
+    Route::post('getByRegion', [CatalogController::class, 'getByRegion'])->name('api.operadora.getByRegion');
+    Route::post('getCountries', [CatalogController::class, 'getCountries'])->name('api.operadora.getCountries');
+    Route::post('getByCountry', [CatalogController::class, 'getByCountry'])->name('api.operadora.getByCountry');
+    Route::get('getCruises', [CatalogController::class, 'getCruises'])->name('api.operadora.getCruises');
+    Route::get('getTrains', [CatalogController::class, 'getTrains'])->name('api.operadora.getTrains');
+    Route::get('getVisa', [CatalogController::class, 'getVisa'])->name('api.operadora.getVisa');
+    Route::post('sendMailVisa', [CatalogController::class, 'sendMailVisa'])->name('api.operadora.sendVisaRequest');
+    Route::post('getDetails', [CatalogController::class, 'getDetails'])->name('api.operadora.getDetails');
+    Route::post('sendMailOffer', [CatalogController::class, 'sendMailOffer'])->name('api.operadora.sendOfferRequest');
+    Route::get('download', [CatalogController::class, 'download'])->name('api.operadora.download');
+});
+
 
 
 ///////////////PETICIONES PROYECTO BITACORA///////////////////

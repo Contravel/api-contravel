@@ -12,6 +12,7 @@ class Boletos extends Model
     public $incrementing = false;
     protected $primaryKey = 'id_boleto';
     protected $fillable = [
+        'id_boleto',
         'id_bitacora',
         'concepto',
         'cargo'
