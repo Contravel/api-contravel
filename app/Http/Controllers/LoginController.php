@@ -42,7 +42,7 @@ class LoginController extends ApiController
                 'password.required' => 'The password field is required.',
             ]
         );
-
+        Log::info($request->all());
         if ($validator->fails()) {
             $errors = $validator->errors()->toArray();
             // Mantener errors como array con mensajes
@@ -59,7 +59,6 @@ class LoginController extends ApiController
 
             if ($response->successful()) {
                 $data = $response->json();
-                Log::info('Respuesta de API Royal:', $data);
                 if (!empty($data) && isset($data['Status']) && $data['Status'] !== false) {
                     $user = new stdClass();
                     $user->id = $data['AgentId'];
@@ -80,57 +79,6 @@ class LoginController extends ApiController
             }
         } catch (Throwable $e) {
             return $this->errorResponse('Error en la solicitud',  $e->getMessage(), 500);
-        }
-    }
-
-    private function apiIris(Request $request)
-    {
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'user' => 'required|string',
-                'password' => 'required|string',
-            ],
-            [
-                'user.required' => 'The user field is required.',
-                'password.required' => 'The password field is required.',
-            ]
-        );
-
-        if ($validator->fails()) {
-            $errors = $validator->errors()->toArray();
-            return $this->errorResponse('Error de validación', $errors, 422);
-        }
-
-        $wsdl = 'http://aereo.contravel.grupoiris.net/login-ws002/LoginService?wsdl';
-
-        try {
-            $client = new SoapClient($wsdl, [
-                'trace' => true,
-            ]);
-            $params = [
-                'Login' => $request->input('user'),
-                'Password' => $request->input('password'),
-            ];
-
-            $response = $client->doLogin(['request' => $params]);
-            $data = $response->response;
-            Log::info(json_encode($data));
-
-            $user = new stdClass();
-            $user->id = $data->User->Id;
-            $user->agency = $data->Agency->Reference;
-            $user->agencyName = $data->Agency->Name;
-            $user->agencyMail = $data->Agency->Email;
-            $user->mail = $data->User->email;
-            $user->name = trim($data->User->FirstName . ' ' . $data->User->LastName1 . ' ' . $data->User->LastName2);
-            $user->token = $data->Uuid;
-
-            return $this->successResponse('Login successful', $user);
-        } catch (\SoapFault $e) {
-            return $this->errorResponse('SOAP Fault',  $e->getMessage(), 500);
-        } catch (\Exception $e) {
-            return $this->errorResponse('An error occurred', $e->getMessage(), 500);
         }
     }
 

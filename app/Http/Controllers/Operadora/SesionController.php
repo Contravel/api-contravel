@@ -46,7 +46,8 @@ class SesionController extends ApiController
     }
 
     public function getDataUser(Request $request)
-    {
+    {   
+        Log::debug('Obteniendo datos del usuario con token', ['token' => $request->bearerToken()]);
         $payloadJWT = $this->validateToken($request->bearerToken());
         if ($payloadJWT->status === true) {
             $user = Cliente::where('username', $payloadJWT->token->sub)->first();

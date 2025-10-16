@@ -29,6 +29,7 @@ Route::prefix('login')->group(function () {
     Route::post('v1', [LoginController::class, 'loginContravel'])->name('api.contravel.login');
     Route::post('v2', [LoginController::class, 'loginAgencies'])->name('api.agencies.login');
     Route::get('renewToken', [LoginController::class, 'renewToken'])->middleware('check.bearer')->name('api.contravel.renew');
+    Route::get('getDataUser', [SesionController::class, 'getDataUser'])->middleware('check.bearer')->name('api.contravel.user');
 });
 
 ///////////////PETICIONES PROYECTO OPERADORA///////////////////
