@@ -6,7 +6,7 @@ use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Firebase\JWT\SignatureInvalidException;
-use Illuminate\Support\Facades\Log;
+
 use stdClass;
 
 trait TokenManage
@@ -26,7 +26,6 @@ trait TokenManage
                 'status' => true, // Token status
                 'uuid' => $hash, // User UUID
             ];
-            Log::info($payload);
             $token =  JWT::encode($payload, $this->secret, 'HS256');
             $respuesta->status = true;
             $respuesta->token = $token;

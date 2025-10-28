@@ -128,6 +128,7 @@ class LoginController extends ApiController
             }
 
             DB::commit();
+            Log::debug(json_encode($jwt));
             return $this->successResponse('Sesión iniciada correctamente',  $jwt->token);
         } catch (QueryException $e) {
             DB::rollBack();
