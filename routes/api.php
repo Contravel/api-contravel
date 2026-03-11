@@ -15,6 +15,19 @@ use App\Http\Controllers\Bitacora\ResourceController;
 use App\Http\Controllers\Bitacora\TarjetasController;
 use App\Http\Controllers\Bitacora\TipoPagoController;
 use App\Http\Controllers\Bitacora\SeguimientosController;
+use App\Http\Controllers\CRM\CatalogoAerolineas;
+use App\Http\Controllers\CRM\CatalogoIataController;
+use App\Http\Controllers\CRM\ComisionesTempController;
+use App\Http\Controllers\CRM\ConveniosAereos;
+use App\Http\Controllers\CRM\CorreoController;
+use App\Http\Controllers\CRM\ExcepcionProveedores;
+use App\Http\Controllers\CRM\PostAdmin;
+use App\Http\Controllers\CRM\PostAutos;
+use App\Http\Controllers\CRM\PostHoteles;
+use App\Http\Controllers\CRM\PostTrenes;
+use App\Http\Controllers\CRM\PostValidation;
+use App\Http\Controllers\CRM\ReembolsosEspeciales;
+use App\Http\Controllers\CRM\ReservasAereasController;
 use App\Http\Controllers\Operadora\CatalogController;
 use App\Http\Controllers\Operadora\SesionController;
 use App\Http\Controllers\ReCaptchaController;
@@ -84,4 +97,86 @@ Route::prefix('bitacora')->group(function () {
     Route::get('obtenerCargos', [CargosController::class, 'obtenerCargos'])->name('api.agencias.obcargo');
     Route::get('obtenerBitacoras', [SeguimientosController::class, 'obtenerBitacoras'])->name('api.agencias.obbitacora');
     Route::get('obtenerAgencias', [AgenciasController::class, 'obtenerClientes'])->name('api.agencias.obbitacora');
+});
+
+
+
+Route::prefix('crm')->group(function () {
+    //Autos
+    Route::post('/ObtenerComisionesAutos', [PostAutos::class, 'obtenerComisiones']);
+    Route::post('/upAutos', [PostAutos::class, 'createDesgloseAutos']);
+    Route::get('/obtenerProvCars', [PostAutos::class, 'getProvCars']);
+    Route::post('/upProveedorAutos', [PostAutos::class, 'agregarProveedorAutos']);
+    //Trenes
+    Route::get('/obtenerProveedoresTrenes', [PostTrenes::class, 'getProveedoresTrenes']);
+    Route::post('/upProveedorTrenes', [PostTrenes::class, 'agregarProveedorTrenes']);
+    Route::post('/upTrenes', [PostTrenes::class, 'createDesgloseTrenes']);
+    Route::post('/CancelReserv', [PostHoteles::class, 'postCancel']);
+    //Hoteles
+    Route::post('/MandarObs', [PostHoteles::class, 'postOBS']);
+    Route::get('/reportConsult', [PostHoteles::class, 'getReport']);
+    Route::post('/upHoteles', [PostHoteles::class, 'createDesglose']);
+    Route::post('/upProveedor', [PostHoteles::class, 'agregarProveedor']);
+    Route::get('/obtenerProveedores', [PostHoteles::class, 'getProveedores']);
+    Route::post('/ReservasPagadas', [PostHoteles::class, 'postAllReserv']);
+    Route::post('/ReservasOperador', [PostHoteles::class, 'postReservOperador']);
+    Route::post('/ReservasConfirmadas', [PostHoteles::class, 'postAllConfir']);
+    Route::post('/ObtenerReserva', [PostHoteles::class, 'postReserva']);
+    Route::post('/ConsultarReserva', [PostHoteles::class, 'postConsultReserva']);
+    Route::post('/ConfirmarReserva', [PostHoteles::class, 'postConfi']);
+    Route::post('/InsertConfir', [PostHoteles::class, 'postInsert']);
+    Route::post('/ConsultReser', [PostHoteles::class, 'postConsult']);
+
+    //Validation
+    Route::post('/login', [PostValidation::class, 'postLogin']);
+    Route::post('/logout', [PostValidation::class, 'postLogout']);
+
+    //Users
+    Route::get('/obtenerUsers', [PostValidation::class, 'getUsers']);
+    Route::get('/obtenerPermisos', [PostValidation::class, 'getPermisos']);
+    Route::post('/UpdatePermisos', [PostValidation::class, 'postPermiso']);
+    //Mail
+    Route::post('/enviarCorreo', [CorreoController::class, 'enviar']);
+    //Docs
+    Route::post('/upload', [PostAdmin::class, 'almacenarImg']);
+    Route::post('/uploadPDF', [PostAdmin::class, 'almacenarPDF']);
+    //ReservasGenerales
+    Route::post('/ConsultAgencias', [PostAdmin::class, 'postAgencias']);
+    Route::post('/ConsultCargosTPV', [PostAdmin::class, 'postCargosTPV']);
+
+    Route::get('/reembolsos-especiales', [ReembolsosEspeciales::class, 'index']);
+    Route::post('/reembolsos-especiales', [ReembolsosEspeciales::class, 'store']);
+    Route::put('/reembolsos-especiales/{id}', [ReembolsosEspeciales::class, 'update']);
+
+    Route::get('/proveedores-excepciones', [ExcepcionProveedores::class, 'index']);
+    Route::post('/proveedores-excepciones', [ExcepcionProveedores::class, 'store']);
+    Route::put('/proveedores-excepciones/{id}', [ExcepcionProveedores::class, 'update']);
+    Route::delete('/proveedores-excepciones/{id}', [ExcepcionProveedores::class, 'destroy']);
+    Route::post('/comisiones/upload-temp', [ComisionesTempController::class, 'uploadTemp']);
+    Route::get('/comisiones/temp/{id}', [ComisionesTempController::class, 'getTemp']);
+    Route::put('/comisiones/temp/{id}', [ComisionesTempController::class, 'updateTemp']);
+    Route::delete('/comisiones/temp/{tempId}', [ComisionesTempController::class, 'destroy']);
+
+    Route::get('/convenios-aereos', [ConveniosAereos::class, 'index']);
+    Route::post('/convenios-aereos', [ConveniosAereos::class, 'store']);
+    Route::patch('/convenios-aereos/{id}', [ConveniosAereos::class, 'update']);
+    Route::delete('/convenios-aereos/{id}', [ConveniosAereos::class, 'destroy']);
+    Route::put('/convenios-aereos/reordenar', [ConveniosAereos::class, 'reordenar']);
+
+    Route::get('/catalogo-aerolineas', [CatalogoAerolineas::class, 'index']);
+    Route::post('/catalogo-aerolineas', [CatalogoAerolineas::class, 'store']);
+    Route::put('/catalogo-aerolineas/{id}', [CatalogoAerolineas::class, 'update']);
+    Route::delete('/catalogo-aerolineas/{id}', [CatalogoAerolineas::class, 'destroy']);
+
+
+
+    Route::get('/reservas-aereas', [ReservasAereasController::class, 'index']);
+    Route::post('/reservas-aereas', [ReservasAereasController::class, 'store']);
+    Route::put('/reservas-aereas/{id}', [ReservasAereasController::class, 'update']);
+    Route::delete('/reservas-aereas/{id}', [ReservasAereasController::class, 'destroy']);
+
+
+    Route::get('/catalogo-iata', [CatalogoIataController::class, 'index']);
+    Route::get('/catalogo-iata/{code}', [CatalogoIataController::class, 'show']);
+    Route::get('/catalogo-iata-search', [CatalogoIataController::class, 'search']);
 });
