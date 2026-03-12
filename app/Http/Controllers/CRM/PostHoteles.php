@@ -397,7 +397,6 @@ class PostHoteles extends Controller
             return response()->json(['error' => $e->getMessage()], 422);
         }
     }
-
     public function postReservOperador(Request $request)
     {
         try {
@@ -452,6 +451,7 @@ class PostHoteles extends Controller
             return response()->json(['error' => 'Error interno del servidor.'], 500);
         }
     }
+
     public function agregarProveedor(Request $request)
     {
         try {
