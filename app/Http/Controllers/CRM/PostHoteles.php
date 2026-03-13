@@ -400,7 +400,6 @@ class PostHoteles extends ApiController
             return response()->json(['error' => $e->getMessage()], 422);
         }
     }
-
     public function postReservOperador(Request $request)
     {
         try {
@@ -457,6 +456,7 @@ class PostHoteles extends ApiController
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
     public function agregarProveedor(Request $request)
     {
         try {
