@@ -26,6 +26,7 @@ class ReCaptchaController extends Controller
         $data = $response->json();
         if ($data['success']) {
             $score = $data['score'];
+
             if ($score >= 0.8) {
                 return response()->json(['success' => true, 'score' => $score, 'status' => 'ok']);
             } elseif ($score >= 0.3) {
@@ -45,7 +46,7 @@ class ReCaptchaController extends Controller
             'token' => 'required|string',
         ]);
         $tokenV2 = $request->input('token');
-        
+
         $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
             'secret' => env('RECAPTCHA_SECRET_V2_KEY'),
             'response' => $tokenV2,

@@ -42,7 +42,6 @@ class LoginController extends ApiController
                 'password.required' => 'The password field is required.',
             ]
         );
-        Log::info($request->all());
         if ($validator->fails()) {
             $errors = $validator->errors()->toArray();
             // Mantener errors como array con mensajes
@@ -59,6 +58,7 @@ class LoginController extends ApiController
 
             if ($response->successful()) {
                 $data = $response->json();
+                Log::debug(json_encode($data));
                 if (!empty($data) && isset($data['Status']) && $data['Status'] !== false) {
                     $user = new stdClass();
                     $user->id = $data['AgentId'];
@@ -102,7 +102,7 @@ class LoginController extends ApiController
             $hash = hash_hmac('sha256', $cifrado, $key);
 
             DB::beginTransaction();
-
+            Log::debug("Intentando actualizar o crear usuario con ID: " . $data['id']);
             $user = Contravel_user::updateOrCreate(
                 ['id' => $data['id']],
                 [
@@ -114,12 +114,10 @@ class LoginController extends ApiController
                 ]
             );
 
-            Users_permiso::updateOrCreate(
-                [
-                    'user' => $data['id'],
-                    'permiso' => 3,
-                ]
-            );
+            Users_permiso::firstOrCreate([
+                'user' => $data['id'],
+                'permiso' => 3,
+            ]);
 
             $jwt = $this->generateToken($user->id, $user->user, $data['token']);
             if (!$jwt->status) {
@@ -140,7 +138,7 @@ class LoginController extends ApiController
     }
 
     public function loginAgencies(Request $request)
-    {   
+    {
         $api = self::apiRoyal($request)->getData(true);
         // $api = self::apiIris($request)->getData(true);
 
@@ -215,7 +213,7 @@ class LoginController extends ApiController
         }
     }
 
-        public function getPayload(Request $request)
+    public function getPayload(Request $request)
     {
         $payloadJWT = $this->validateToken($request->bearerToken());
 

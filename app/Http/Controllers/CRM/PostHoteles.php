@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\CRM;
 
+use App\Http\Controllers\ApiController;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\LoginController;
 use App\Models\admon_op\breakdownHotels;
 use App\Models\admon_op\catalogSupplierHotels;
 use App\Models\admon_op\commentReservations;
@@ -15,13 +17,14 @@ use App\Models\HotelesDB\Observaciones;
 use App\Models\HotelesDB\Proveedores;
 use App\Models\HotelesDB\HotelesReservados;
 use App\Models\HotelesDB\Reservacion;
+use Carbon\Carbon;
 use Dom\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 use Illuminate\Validation\ValidationException;
 
-class PostHoteles extends Controller
+class PostHoteles extends ApiController
 {
     public function postConsult(Request $request)
     {
@@ -401,16 +404,20 @@ class PostHoteles extends Controller
     public function postReservOperador(Request $request)
     {
         try {
-            // Validar los campos requeridos
-            $validateData = $request->validate([
-                'fechaInicio' => 'required',
-                'fechaFin'    => 'required',
-                'user'        => 'required',
-            ]);
+            $login = new LoginController();
+            $function = $login->getPayload($request)->getContent();
+            $data = json_decode($function, true);
+            $user = $data['data']['token']['sub'];
 
-            $fechaInicio = $validateData['fechaInicio'];
-            $fechaFin    = $validateData['fechaFin'];
-            $user        = $validateData['user'];
+            $fechaFin = Carbon::now()->format('Y-m-d');
+            $fechaInicio = Carbon::now()
+                ->subMonths(2)
+                ->format('Y-m-d');
+            Log::debug('postReservOperador: obteniendo reservas para el operador', [
+                'user' => $user,
+                'fechaInicio' => $fechaInicio,
+                'fechaFin' => $fechaFin
+            ]);
 
             // Subconsulta para obtener las reservaciones confirmadas
             $reservacionesConfirmadas = confirmedReservations::select('CVE_RESERVACION')->get();
@@ -442,14 +449,12 @@ class PostHoteles extends Controller
                 ->orderBy('FCH_CHECKIN', 'asc')
                 ->get();
 
-            return response()->json($reservaciones);                   // Obtener un array plano
+            return $this->successResponse('no. reservas obtenidas', $reservaciones);                // Obtener un array plano
 
-            // Devolver siempre un array, incluso si está vacío
-            return response()->json($resultado ?: []);
         } catch (ValidationException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error interno del servidor.'], 500);
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
     public function agregarProveedor(Request $request)

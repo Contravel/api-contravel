@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Contravel_user extends Model
 {
+
+    protected $table = 'contravel_users';
     protected $fillable = [
         'id',
         'user',
@@ -17,9 +19,9 @@ class Contravel_user extends Model
     ];
     public $timestamps = false;
 
-        public function agency()
+    public function agency()
     {
-        return $this->belongsTo(Agencies::class, 'cve_agencia'); 
+        return $this->belongsTo(Agencies::class, 'cve_agencia');
         // 👆 asegúrate que la FK se llame agency_id (o cámbiala aquí)
     }
 }

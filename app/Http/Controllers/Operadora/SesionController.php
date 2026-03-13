@@ -16,7 +16,6 @@ class SesionController extends ApiController
     use TokenManage;
     public function sso_sesion(Request $request)
     {
-        Log::debug('Iniciando validación SSO', $request->all());
         $validator = Validator::make(
             $request->all(),
             [
@@ -35,7 +34,6 @@ class SesionController extends ApiController
         }
         $user = substr(base64_decode($request->input('user')), 10);
         $pass = substr(base64_decode($request->input('password')), 10);
-        Log::debug('Credenciales decodificadas', ['user' => $user, 'password' => $pass]);
         $login = new LoginController();
 
         $response = $login->loginAgencies(new Request([
@@ -46,9 +44,10 @@ class SesionController extends ApiController
     }
 
     public function getDataUser(Request $request)
-    {   
+    {
         Log::debug('Obteniendo datos del usuario con token', ['token' => $request->bearerToken()]);
         $payloadJWT = $this->validateToken($request->bearerToken());
+        Log::debug('Resultado de validación del token', ['payload' => $payloadJWT]);
         if ($payloadJWT->status === true) {
             $user = Cliente::where('username', $payloadJWT->token->sub)->first();
             Log::debug('Usuario obtenido', ['user' => $user]);
@@ -58,7 +57,8 @@ class SesionController extends ApiController
         return $this->errorResponse('Token inválido',  $payloadJWT->message, 401);
     }
 
-    public function getAgencyUser(Request $request){
+    public function getAgencyUser(Request $request)
+    {
         $payloadJWT = $this->validateToken($request->bearerToken());
         Log::debug('Validando token para obtener agencia de usuario', ['token' => $payloadJWT]);
         if ($payloadJWT->status === true) {
@@ -68,7 +68,8 @@ class SesionController extends ApiController
         }
     }
 
-    public function getServer(Request $request){
+    public function getServer(Request $request)
+    {
         //$host = $request->getHost();
         $host = "//localhost";
         return $this->successResponse('Host obtenido correctamente', $host);

@@ -31,6 +31,7 @@ use App\Http\Controllers\CRM\ReservasAereasController;
 use App\Http\Controllers\Operadora\CatalogController;
 use App\Http\Controllers\Operadora\SesionController;
 use App\Http\Controllers\ReCaptchaController;
+use App\Http\Controllers\Tablero\SessionController;
 
 ///////////////PETICIONES PARA RECPATCHA V2 Y V3///////////////////////
 Route::prefix('recaptcha')->group(function () {
@@ -42,6 +43,7 @@ Route::prefix('login')->group(function () {
     Route::post('v1', [LoginController::class, 'loginContravel'])->name('api.contravel.login');
     Route::post('v2', [LoginController::class, 'loginAgencies'])->name('api.agencies.login');
     Route::get('renewToken', [LoginController::class, 'renewToken'])->middleware('check.bearer')->name('api.contravel.renew');
+    Route::get('getUserInfo', [SessionController::class, 'getDataUser'])->middleware('check.bearer')->name('api.contravel.user');
     Route::get('getDataUser', [SesionController::class, 'getDataUser'])->middleware('check.bearer')->name('api.contravel.user');
 });
 
@@ -119,7 +121,7 @@ Route::prefix('crm')->group(function () {
     Route::post('/upProveedor', [PostHoteles::class, 'agregarProveedor']);
     Route::get('/obtenerProveedores', [PostHoteles::class, 'getProveedores']);
     Route::post('/ReservasPagadas', [PostHoteles::class, 'postAllReserv']);
-    Route::post('/ReservasOperador', [PostHoteles::class, 'postReservOperador']);
+    Route::get('/ReservasOperador', [PostHoteles::class, 'postReservOperador']);
     Route::post('/ReservasConfirmadas', [PostHoteles::class, 'postAllConfir']);
     Route::post('/ObtenerReserva', [PostHoteles::class, 'postReserva']);
     Route::post('/ConsultarReserva', [PostHoteles::class, 'postConsultReserva']);
